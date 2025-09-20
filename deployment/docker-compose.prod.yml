@@ -1,0 +1,125 @@
+# Production Docker Compose configuration
+# Optimized for cloud deployment with security hardening
+
+version: '3.8'
+
+services:
+  crypto_service:
+    build:
+      context: .
+      dockerfile: crypto_service/Dockerfile
+      # Use runtime stage for production (no build tools)
+      target: runtime
+    ports:
+      - "${CRYPTO_PORT:-8001}:8001"
+    environment:
+      ENVIRONMENT: production
+      PYTHONPATH: /code
+      DEBUG: "false"
+      # Security: Disable reload in production
+      RELOAD: "false"
+    env_file:
+      - .env.production
+    networks:
+      - kc-nw
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import requests; requests.get('http://localhost:8001/health', timeout=5)"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    # Security hardening
+    read_only: true
+    tmpfs:
+      - /tmp
+      - /var/tmp
+    # Resource limits for cloud deployment
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: '0.5'
+        reservations:
+          memory: 256M
+          cpus: '0.25'
+    # Security: No privileged access
+    privileged: false
+    # Security: Drop all capabilities
+    cap_drop:
+      - ALL
+    # Security: Add only required capabilities
+    cap_add:
+      - NET_BIND_SERVICE
+    # Logging configuration for cloud deployment
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  pki_service:
+    build:
+      context: .
+      dockerfile: pki_service/Dockerfile
+      # Use runtime stage for production (no build tools)
+      target: runtime
+    ports:
+      - "${PKI_PORT:-8000}:8000"
+    environment:
+      ENVIRONMENT: production
+      PYTHONPATH: /code
+      DEBUG: "false"
+      # Security: Disable reload in production
+      RELOAD: "false"
+    env_file:
+      - .env.production
+    depends_on:
+      crypto_service:
+        condition: service_healthy
+    networks:
+      - kc-nw
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import requests; requests.get('http://localhost:8000/health', timeout=5)"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    # Security hardening
+    read_only: true
+    tmpfs:
+      - /tmp
+      - /var/tmp
+    # Resource limits for cloud deployment
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: '0.5'
+        reservations:
+          memory: 256M
+          cpus: '0.25'
+    # Security: No privileged access
+    privileged: false
+    # Security: Drop all capabilities
+    cap_drop:
+      - ALL
+    # Security: Add only required capabilities
+    cap_add:
+      - NET_BIND_SERVICE
+    # Logging configuration for cloud deployment
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+networks:
+  kc-nw:
+    driver: bridge
+    # Security: Enable network encryption
+    driver_opts:
+      com.docker.network.bridge.enable_icc: "false"
+      com.docker.network.bridge.enable_ip_masquerade: "true"
+

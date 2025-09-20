@@ -1,0 +1,89 @@
+
+services:
+  crypto_service:
+    build:
+      context: .
+      dockerfile: crypto_service/Dockerfile
+      target: builder  # Use builder stage for development
+    ports:
+      - "${CRYPTO_PORT:-8001}:8001"
+    environment:
+      ENVIRONMENT: ${ENVIRONMENT:-production}
+      PYTHONPATH: /code
+      # Security: Disable debug mode in production
+      DEBUG: "false"
+    env_file:
+      - .env
+    networks:
+      - kc-nw
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import requests; requests.get('http://localhost:8001/health', timeout=5)"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    # Security: Run as non-root user (defined in Dockerfile)
+    # Security: Read-only root filesystem
+    read_only: true
+    tmpfs:
+      - /tmp
+      - /var/tmp
+    # Resource limits for cloud deployment
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: '0.5'
+        reservations:
+          memory: 256M
+          cpus: '0.25'
+
+  pki_service:
+    build:
+      context: .
+      dockerfile: pki_service/Dockerfile
+      target: builder  # Use builder stage for development
+    ports:
+      - "${PKI_PORT:-8000}:8000"
+    environment:
+      ENVIRONMENT: ${ENVIRONMENT:-production}
+      PYTHONPATH: /code
+      # Security: Disable debug mode in production
+      DEBUG: "false"
+    env_file:
+      - .env
+    depends_on:
+      crypto_service:
+        condition: service_healthy
+    networks:
+      - kc-nw
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import requests; requests.get('http://localhost:8000/health', timeout=5)"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    # Security: Run as non-root user (defined in Dockerfile)
+    # Security: Read-only root filesystem
+    read_only: true
+    tmpfs:
+      - /tmp
+      - /var/tmp
+    # Resource limits for cloud deployment
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: '0.5'
+        reservations:
+          memory: 256M
+          cpus: '0.25'
+  
+networks:
+  kc-nw:
+    driver: bridge
+
+volumes:
+  pkidata:

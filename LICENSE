@@ -1,6 +1,6 @@
 MIT License
 
-Copyright (c) 2025 jagan d
+Copyright (c) 2025 fmcrypto Service
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -19,3 +19,24 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
+
+---
+
+THIRD-PARTY COMPONENTS
+
+DUKPT Implementation (common/utils/sw/dukpt.py)
+===============================================
+
+This implementation is based on the reference implementation provided by the
+Accredited Standards Committee X9 (ASC X9) for ANSI X9.24-3-2017.
+
+Source: https://x9.org/standards/x9-24-part-3-test-vectors/
+Reference: https://x9.org/wp-content/uploads/2018/03/X9.24-3-2017-Python-Source-20180129-1.pdf
+
+Original X9 Disclaimer:
+"The information is provided 'as is' without warranty of any kind. X9 does not accept 
+any responsibility or liability for the accuracy, content, completeness, or reliability 
+of the computer code and information contained on this page and website."
+
+This implementation has been modified from the original X9 reference implementation
+to integrate with the fmcrypto Service architecture and requirements.

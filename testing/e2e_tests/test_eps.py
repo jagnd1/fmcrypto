@@ -1,0 +1,397 @@
+import asyncio
+import pytest
+from .ep_dependencies import crypto_url, exchange, pki_url, query_param
+
+class TestEps:
+
+    # helper methods for ep testing
+    async def _kp_gen(self, algo = "ECP256"):
+        url = crypto_url + "/v1/crypto/kp_gen" + query_param
+        body = {"algo": algo, "use_mode": "SIGN"}
+        resp = await exchange(url, body)
+        if resp:
+            pk = resp['pk']
+            sk_lmk = resp['sk_lmk']
+            return pk, sk_lmk
+    
+    async def _gen_sign(self, algo = "ECP256", sk_lmk = None, msg = None):
+        url = crypto_url + "/v1/crypto/gen_sign" + query_param
+        body = {"algo": algo, "sk_lmk": sk_lmk, "msg": msg}
+        resp = await exchange(url, body)
+        if resp and resp['status'] == "success":
+            return resp['signature']
+
+    async def _ecdh(self, eph_pk, algo = "ECP256", key_type = "", use_mode = "", shared_info = ""):
+        url = crypto_url + "/v1/crypto/ecdh" + query_param
+        body = {
+            "eph_pk": eph_pk, "algo": algo, "key_type": key_type, "use_mode": use_mode, 
+            "shared_info": shared_info}
+        resp = await exchange(url, body)
+        if resp and resp['status'] == "success":
+            return resp['derived_key'], resp['kcv'], resp['recp_eph_pk']
+    
+    async def _kcv_gen(self, key_lmk):
+        url = crypto_url + "/v1/crypto/kcv_gen" + query_param
+        body = {"key_lmk": key_lmk}
+        resp = await exchange(url, body)
+        if resp and resp['status'] == "success":
+            return resp['kcv']
+
+    async def _key_gen(self, key_type = "BDK", use_mode = "DERIVE", algo = "A128"):
+        url = crypto_url + "/v1/crypto/key_gen" + query_param
+        body = {"key_type": key_type, "use_mode": use_mode, "algo": algo}
+        resp = await exchange(url, body)
+        if resp and resp['status'] == "success":
+            return resp['key_lmk'], resp['kcv']
+
+    async def _ipek_derive(self, bdk_lmk, iksn, algo, use_mode):
+        url = crypto_url + "/v1/crypto/ipek_derive" + query_param
+        body = {"bdk_lmk": bdk_lmk, "iksn": iksn, "algo": algo, "use_mode": use_mode}
+        resp = await exchange(url, body)
+        if resp and resp['status'] == "success":
+            return resp['ipek_lmk'], resp['kcv']
+
+    async def _exp_key(self, key_lmk, kcv, pk):
+        url = crypto_url + "/v1/crypto/exp_key" + query_param
+        body = {"key_lmk": key_lmk, "kcv": kcv, "pk": pk}
+        resp = await exchange(url, body)
+        if resp and resp['status'] == "success":
+            return resp['key_pk']
+
+    async def _exp_tr31(self, key_lmk, zmk_lmk, iksn):
+        url = crypto_url + "/v1/crypto/exp_tr31" + query_param
+        body = {"key_lmk": key_lmk, "zmk_lmk": zmk_lmk, "iksn": iksn}
+        resp = await exchange(url, body)
+        if resp and resp['status'] == "success":
+            return resp['key_zmk']
+
+    async def _rand_gen(self, len):
+        url = crypto_url + "/v1/crypto/rand_gen" + query_param
+        body = {"len": len}
+        resp = await exchange(url, body)
+        if resp and resp['status'] == "success":
+            return resp['rand_no']
+
+    async def _data_encr(self, key_lmk, encr_mode, iv, msg, algo):
+        url = crypto_url + "/v1/crypto/data_encr" + query_param
+        body = {"key_lmk": key_lmk, "encr_mode": encr_mode, "iv": iv, "msg": msg, "algo": algo}
+        resp = await exchange(url, body)
+        if resp and resp['status'] == "success":
+            return resp['encr_msg']
+
+    async def _data_decr(self, key_lmk, encr_mode, iv, encr_msg, algo):
+        url = crypto_url + "/v1/crypto/data_decr" + query_param
+        body = {
+            "key_lmk": key_lmk, "encr_mode": encr_mode, "iv": iv, "encr_msg": encr_msg, 
+            "algo": algo}
+        resp = await exchange(url, body)
+        if resp and resp['status'] == "success":
+            return resp['msg']
+
+    async def _mac(self, key_lmk, mac_mode, msg):
+        url = crypto_url + "/v1/crypto/mac" + query_param
+        body = {"key_lmk": key_lmk, "mac_mode": mac_mode, "msg": msg}
+        resp = await exchange(url, body)
+        if resp and resp['status'] == "success":
+            return resp['mac_resp']
+
+    async def _wrap(self, kbpk, key, algo):
+        url = crypto_url + "/v1/crypto/wrap" + query_param
+        body = {"kbpk": kbpk, "key": key, "algo": algo}
+        resp = await exchange(url, body)
+        if resp and resp['status'] == "success":
+            return resp['key_kbpk']
+
+    async def _unwrap(self, key_kbpk, kbpk):
+        url = crypto_url + "/v1/crypto/unwrap" + query_param
+        body = {"key_kbpk": key_kbpk, "kbpk": kbpk}
+        resp = await exchange(url, body)
+        if resp and resp['status'] == "success":
+            return resp['key']
+
+    async def _cert_create(self, algo, cert_level, csr, sk_lmk):
+        url = pki_url + "/v1/serv/cert"
+        body = {"csr": csr, "sk_lmk": sk_lmk, "cert_level": cert_level, "algo": algo}
+        resp = await exchange(url, body)
+        if resp and resp['status'] == 'success':
+            return resp['cert']
+    
+    async def _cert_renew(self, algo, cert_level, cert, sk_lmk):
+        url = pki_url + "/v1/serv/cert"
+        body = {
+            "cert": cert, "sk_lmk": sk_lmk, "cert_level": cert_level, "algo": algo, 
+            "issuer_cert": cert}
+        resp = await exchange(url, body, "PUT")
+        if resp and resp['status'] == 'success':
+            return resp['cert']
+
+    async def _crl(self, algo, cert, sk_lmk):
+        url = pki_url + "/v1/serv/crl"
+        body = {"cert": cert, "issuer_cert": cert, "sk_lmk": sk_lmk, "algo": algo}
+        resp = await exchange(url, body)
+        if resp and resp['status'] == 'success':
+            return resp['crl']
+
+    async def _trans_pin(self, key_lmk: str, src_pinblk: str, dest_key: str, ksn: str, pan: str):
+        url = crypto_url + "/v1/crypto/trans_pin" + query_param
+        body = {
+            "key_lmk": key_lmk, "src_pinblk": src_pinblk, "dest_key": dest_key, "ksn": ksn, 
+            "pan": pan}
+        resp = await exchange(url, body)
+        if resp and resp['status'] == "success":
+            return resp['dest_pinblk']
+
+    async def _exp_tr34(self, kbpk: str, kcv: str, kdh_cert: str, krd_cert: str, kdh_sk_lmk: str):
+        url = crypto_url + "/v1/crypto/exp_tr34" + query_param
+        body = {
+            "kbpk": kbpk, "kcv": kcv, "kdh_cert": kdh_cert, "krd_cert": krd_cert, 
+            "kdh_sk_lmk": kdh_sk_lmk}
+        resp = await exchange(url, body)
+        if resp and resp['status'] == "success":
+            return resp['ed']
+
+    # ep methods for crypto service
+    @pytest.mark.asyncio
+    async def test_crypto_health(self):
+        url = crypto_url + "/health" + query_param
+        resp = await exchange(url, body={}, method="GET")
+        if resp:
+            message = resp['message']
+            assert len(message) > 0
+            assert isinstance(message, str)
+
+    @pytest.mark.asyncio
+    async def test_kp_gen_ecp256(self):
+        pk, sk_lmk = await self._kp_gen("ECP256")
+        assert len(pk) > 0
+        assert len(sk_lmk) > 0
+        assert isinstance(pk, str)
+        assert isinstance(sk_lmk, str)
+
+    @pytest.mark.asyncio
+    async def test_kp_gen_r2k(self):
+        pk, sk_lmk = await self._kp_gen("R2K")
+        assert len(pk) > 0
+        assert len(sk_lmk) > 0
+        assert isinstance(pk, str)
+        assert isinstance(sk_lmk, str)
+    
+    @pytest.mark.asyncio
+    async def test_gen_sign_r2k(self):
+        pk = "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAkHb3rzuF6dBRfYDfyDt6y40bYbmx0s3Lgt1PuixLmOWLd1XMLG80aXroso24VTZ0d4GTXCFePb1GodeOMWdxUqUpUxxK8dHMAUls3ur4vFNNs4sNC2EX8JZkf7Z3WMS_oCFMQ_YHMwvYhdEJ8nuTkrUiLePmT4dJbJKVH3YFJk-n3cvHjXi4BLvQCKqpWw99Y18-veZnTxq4VtVXpoi5MocmrzragBwiUfoRcbz5yv2BtGm5_fXRUGAAoxxg5IM6_f1Z2AvQnEZRH5JeJa3Kb9J3DhKj9aZWHtn2omqBjGTdmio0QneSi2vWMkk0qbL3luFs0hcYKb9FJar2d9bdbwIDAQAB"
+        sk_lmk = "RDI1MTJTMEVTMDBFMDAwMDYxQjA3RTZBNTQyNzdCOTMyRjU4MDRERTk3NzhBMzRFM0VDQjVGQjQ0OEYzRDI2ODRFMDhBMjYyNjkzMUY4MUFGQ0Q0NjY0NjA1QUJDMUQwRDhGNzI2QjYxOEE4MzhFODA2OUQyNDgyQjRBOTk0QUY1MzZEMzkxQTBEMEY5OUM0ODk3NDI0NUMwNEJCN0MzQ0NBNEE2QTZFMzNBQzM0Mjg0ODlBMEIxRUEyOTE4Q0ZDQzFERDZFQUZEMUZEOEQzMTg3ODEzMjU0OEI4MTdEQTdCQ0JENDMwQzY2NjA5RjgwODYyMEQwMzBDRDVCN0JCM0ZBMDNCMzU0Q0VFQTcwREI1Q0E3NDAzNDI5NzdCOEM0RjhEN0UxQUNCMTFEOTgzNjZCNDg4OTJEQjU5RDc2QTEwOEU1QTdEODUwRTNGNTEzNTNGMzJBRkNFN0JBQTk2NTM2RDU3NzM3Q0I4MTk3RUM4MzFBN0E3QjI0OTk4MUZERkI0NkNCNjk0OUQ3OTFEN0ZBQTQ3QjEzNDA1MkRFRTY4MEU0RjJDNEI2MTA3N0VEMTRDQ0I0NkRFRjhEODhBODVGNjQ2NEVGQTRFMzBCNkJGMkFDNjRBQzk4OTg2MkI4QTQ4MDBERUEwQTJERTQ2QTJBMzg3NzVEMzIxRDU0RjRFNzQ3MUY0MkRDMDEzRTRCMTM3ODQxMTJDN0JBNEM2QUMwQTBGMjUwNUQ3QjI5OTdDMUY1MjVGNUM5MjM2MUYyOUU3QURGRTFERjM2NkUyQzZFRUEwRDI1NkI3NDZEMjFENTVGMTYxNzAzQjI0RjRBNjQ2NkYwQzRBNjI5MzlEN0UxRDU1QTRFQ0E0NjUyRkQ2MzhFREE0MjM3MDQ4QkQyQ0ZFMzQwREYzQkREQkY3NjE3OTUzRTFDRjhENzEwODQ0QTMxNTI0MkMzM0E2OUFGRUQyRTg5MTQyRDE4MTU5QzM3RkI2RDdGNDREMTA0NDBEMEZGQTg4MTI1MjUxMDZGQUE0Q0U3NEUzODBDMjY1RDI2RTYzNkMxQzA4QUY3RTNERTNDMjNEQUY2NDdDMTRBNkM0RjFERjU5NDUwRTA1QjgwMDgzQjUzMDVFRkUwNTI3MDNGNjFGM0FBODNCRDUwQ0IwMjA1NjQxQzdDMUM3MjA5NzQzN0JEMzJEMjYwM0UzMTQ0NjNEQzUwMDY5OTkyNUFBNDI0NUZCNkRENTVFRTY4QTlFODVBRTRCRDM3Q0U0OTJGNDkzOTA1RTJDMDMzMTExQTE2MDUwM0NEMUY2QjE2ODAyQ0MwOTEzMjAwOTIyQ0JDOTVGMkYyRDg1RTdGRjBENkZGMEJDNzg5RUIyMzFFM0RCRDVGMjFGRTg2Q0NBQzIxQTY2ODEwNTQ5QzE5QkYxMjQwNEFEMTUyRTMyM0U2NDJCQkU0NEUxNTY1RDBCMURFRTlFNjlBMzIxQjcxNDkzNzNCRjIyMUQ0MzRBNEYyMDQ3MUJBMzMyNDRFQkRFRTMyMjgyOEVDODM5OUNFM0QzMURENzQwQzk5MTJEN0YwNEY0RTcxN0EwNjc2RkQwQUQ4QUI5QjhDM0U5Q0RGRTFDRjk2NTk5M0QzN0FEQzRDMDMyMkZCNzNENTg5RkFFQzJDQjIwOTJEREU3OUM4MDEwQ0Y0RUNFMDMwRDhEMDk1RjI5QTg1QkY2MEFFODQ2RDUyOTY3RUJDQjE2QjE5ODZDM0FBNkQ2OUYyMjE2MUQ5Q0JGRUE2RDg4RTgzQUZCRjg3Njg4OTkyRTU4RkEwQUExNzQwOEU0QTc1MTg4RUFBODhDODVDODcyNDYwNDI4RkVGNDBFNzJCODcxNTgzRkYzOUNENzY3NjcyQjE4QTY4ODJDMThCMERGNTJGRTIyQjRGNEZGRjZFQzk2QzEyQjVCQjA0MjY3MjJDNjcyMzA0ODY5MTg4OTU2NTgxQjc2RTZFQkY1NUFCQzgyOEU2NTdGRUNGRkUzREU2RjgzMTQ2QzdCODgxMUJBNkJFRTgzMTIwRjdFQTMyRkFGNkQ0QTkyM0E1NzdCMzQ2M0U0Q0MxMEVBOTk2QkVGODM3NDVGQjgzN0ZGQ0YzNDY4REQzOENGOTdENENBRjAyOTZCRUNBMTAyM0Y4NjYxMUMzRDFBRjhCOUM4RjI0NjVDMUI0NzBGOUYyN0U3MTBDMzlCNTMzNjZBODM1QkEyMEFDNkVFMDY3OTI0NkM3REY1OEU1OURBNkEzODdBQzUzOTE4Mjg1Mjc1QjQxQUM4OTc3MDZDMzk4RDNERTYxOUM4MkUyNEFDOTIxQjQ3MjNGRDdDRTQyMjA4OTEzRDMxQjY5NzAzQzYwODhEMTgxMzhERTk1MTNEMEZEQjcyMUE2M0VFRTk1RDRBRkZBRTIxMjJFRDBDRDRBRDk2MzQzOUFFODUyQjJBOTMzMTgxQTk3NTlBQUI2NTI0MzU2ODYwNTRCREMwMDkwNEI0QUNGQTZCMzdDNTU4ODhCRDhDMkFCQjc0MjQ2NTQ1RTE4NzlFRDUzNDhEQkREOTdEMzg3OUI1NjJDMjQ0RTQzMkU2M0NBMEU3NDgxMDhCRUU4Q0Q3NTUyQ0Q2Mjc5NTQxRkNFMTFCOTdCNUFGMzcyRjRBNkEyODcwQ0JBNjcyMUMzNERFRDJEMkRBQTUwQ0QyNzRBODVCNDNGQkNDMTNCNDdBQTI1MzhFRUVFRkU4MzMyMjA4NkRBN0Q2MjMzQ0RGNUY3QkQ2QkU5NEU2RjFBODExOTkxNzJGQjA0ODY4RDU0RDZCRkVEQjhCN0YzM0JBQkY5Q0I3RkE2REJCMDA4NDMwMDUwQTVCQjFCREM3OTJEOTZCQjA5QjQwNDgzM0E4MUM3OEQ5MTlCRDE5NkI4RjFBMURGQUMxMTMwMzY2Qjk0RjkzNjE3QTQ1NkQ0ODA5RkM3NjE4QzRCOTkzOURBMkFENDUwNzE3MDhGODNGODhDRTg4NEVDNUI1M0VDQUVDMEJFQTU0NzRGQTA5OURDNjg3MTAzRkE4NzUxMjhGNzFBMDVBREZFNkI5NTdDMEJGRUVGNTdDQjQ2OUUyQkVGNDE2NzYyN0Y4NTAwRDVEQUQ4RDAyMENCRTZCMDVGQkRBNTIwRTc0OUFERDEwM0NCNjM2MUI3RTBGQ0ZDQzQxRDI3OUUyMjk1MEM0Q0UzQkY4QzAwRTlERTYzNzA2RUJBRDIyRkFGQjU3QUQ0QTM2MjJFRTY3RDQ1NjBCNzE2NjY5Q0Y4RTNGODJBNjIxQjU0NTZGRDk1MjU2QTZBMjM4QUUyQkFEN0I4NjlBNzYzMTU3NzQwOTEwNTFGQjQ2MTNERDIxQjNBNTVCMw=="
+        msg = "1234567890"
+        sign_data = await self._gen_sign("R2K", sk_lmk, msg=msg)
+        assert len(sign_data) > 0
+        assert isinstance(sign_data, str)
+
+    @pytest.mark.asyncio
+    async def test_gen_sign_ecp256(self):
+        pk = "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEw_1V3KMih1tQcjlI2b-ay_h_V12EtgNbujDjIsDrmF_w-f8FsN4KY1r_80PBZ1nLKFNOjM66ez8DVP3GUS3-vQ=="
+        sk_lmk = "RDAzMzZTMEVTMDBFMDAwMDAyODkwQjAxMzM5MzRGOUZBQjVDNjg0ODhCQjVBMzI3N0I0OUM3RTlGOTk1MDhEOUYyMzg3OTNFREJDQjlBNDlDN0E2NUE2OTQzM0QwMEJDMTVFRDcwNzMzRTI1OUNGRTBGNkMwNDgyMzhBMTVBOEUwODg0NDFDMTg3NzVDNDc5OEFBQjA2RUZDOEI2ODg3MEVGRkU1MjEyQTEzQzc1QkY5RUQ5NkExOEZENjMwM0I1NUIwNTA3Qjg5OEE3NzAzMEZBOTU2MUY4REExQTExRjEwQ0JGMDU2OEVEQUIwRTcwQjk3MUIyRDYyNjdBRUEwNkMzOUM3MzREQkFENDA1QkY2OENCMEUzMDc0MzAxMkRFNTA4NDQ4MTEzNEIzQkUzRDI5OTkwMTE1Q0QwMEZGNjE2RjE4OTlEMzQyOTBDNzVC"
+        msg = "1234567890"
+        sign_data = await self._gen_sign("ECP256", sk_lmk, msg=msg)
+        assert len(sign_data) > 0
+        assert isinstance(sign_data, str)
+
+    @pytest.mark.asyncio
+    async def test_ecdh(self):
+        eph_pk = "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEw_1V3KMih1tQcjlI2b-ay_h_V12EtgNbujDjIsDrmF_w-f8FsN4KY1r_80PBZ1nLKFNOjM66ez8DVP3GUS3-vQ=="
+        algo = "ECP256"
+        key_type = "BDK"
+        use_mode = "DERIV"
+        derived_key, kcv, recp_eph_pk = await self._ecdh(eph_pk, algo, key_type, use_mode)
+        assert len(derived_key) > 0
+        assert len(kcv) > 0
+        assert len(recp_eph_pk) > 0
+        assert isinstance(derived_key, str)
+        assert isinstance(kcv, str)
+        assert isinstance(recp_eph_pk, str)
+
+    @pytest.mark.asyncio
+    async def test_exp_key(self):
+        key_lmk = "RDAxMTJEMEFCMDBFMDAwMEQ0MkRFOEU5MjU4RjkyOTBDMTJDQUQwQjZEM0JCMDk0MjBDRkFBMTMwNTY3REExODUzMEU0MTM2MTJFQzA5MUYyM0JFMjg0RTNDQkYxOTFBNkM0NURERkY5RDJCQUExMg=="
+        kcv = "62f55b"
+        pk = "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAkHb3rzuF6dBRfYDfyDt6y40bYbmx0s3Lgt1PuixLmOWLd1XMLG80aXroso24VTZ0d4GTXCFePb1GodeOMWdxUqUpUxxK8dHMAUls3ur4vFNNs4sNC2EX8JZkf7Z3WMS_oCFMQ_YHMwvYhdEJ8nuTkrUiLePmT4dJbJKVH3YFJk-n3cvHjXi4BLvQCKqpWw99Y18-veZnTxq4VtVXpoi5MocmrzragBwiUfoRcbz5yv2BtGm5_fXRUGAAoxxg5IM6_f1Z2AvQnEZRH5JeJa3Kb9J3DhKj9aZWHtn2omqBjGTdmio0QneSi2vWMkk0qbL3luFs0hcYKb9FJar2d9bdbwIDAQAB"
+        key_pk = await self._exp_key(key_lmk, kcv, pk)
+        assert len(key_pk) > 0
+        assert isinstance(key_pk, str)
+
+    @pytest.mark.asyncio
+    async def test_exp_tr31(self):
+        key_lmk = "RDAxMTJEMEFCMDBFMDAwMEQ0MkRFOEU5MjU4RjkyOTBDMTJDQUQwQjZEM0JCMDk0MjBDRkFBMTMwNTY3REExODUzMEU0MTM2MTJFQzA5MUYyM0JFMjg0RTNDQkYxOTFBNkM0NURERkY5RDJCQUExMg=="
+        zmk_lmk = "RDAxMTJEMEFCMDBFMDAwMEQ0MkRFOEU5MjU4RjkyOTBDMTJDQUQwQjZEM0JCMDk0MjBDRkFBMTMwNTY3REExODUzMEU0MTM2MTJFQzA5MUYyM0JFMjg0RTNDQkYxOTFBNkM0NURERkY5RDJCQUExMg=="
+        iksn = "123456789012345600000000"
+        key_zmk = await self._exp_tr31(key_lmk, zmk_lmk, iksn)
+        assert len(key_zmk) > 0
+        assert isinstance(key_zmk, str)
+
+    @pytest.mark.asyncio
+    async def test_rand_gen(self):
+        rand_no = await self._rand_gen("10")
+        assert len(rand_no) > 0
+        assert isinstance(rand_no, str)
+
+    @pytest.mark.asyncio
+    async def test_exp_tr34(self):
+        kbpk = "RDAxMTJEMEFCMDBFMDAwMEI0MkUyMTY3QjI3ODE2QkQxOEQwN0EyODhGQUFENTUzREI4NjlBMTk4QThGQkNGMUQ4MTgyNEEwQjk3QTQzMkNEMkIwQkU5MTc3MEU4RTk2MzJDRUQwQzU3OEZBNTA5Rg=="
+        kdh_cert = "MIIDajCCAlSgAwIBAgIIGGYC2wHUAZAwCwYJKoZIhvcNAQELMFAxCzAJBgNVBAYTAkVHMQ4wDAYDVQQIDAVDYWlybzEOMAwGA1UEBwwFQ2Fpcm8xDzANBgNVBAoMBlBheW1vYjEQMA4GA1UEAwwHUm9vdC1DQTAeFw0yNTA5MTcwNzU3MjRaFw0yNjA5MTcwNzU3MjRaMFAxCzAJBgNVBAYTAkVHMQ4wDAYDVQQIDAVDYWlybzEOMAwGA1UEBwwFQ2Fpcm8xDzANBgNVBAoMBlBheW1vYjEQMA4GA1UEAwwHUm9vdC1DQTCCASAwCwYJKoZIhvcNAQEBA4IBDwAwggEKAoIBAQDY79hCukfKDNejbRa6hTKMozdBWan7LrwYBU0P5np1aJpdjOj261Tr-PIWKFjE4ZfES-bwZykZWYGBWOw4b94ZULtFc9E98r08R8gYfl9aCUM04YVwJrTSZVGwQy7S0U73iHiaZa7jE5iqXBHbrM_fWv_txu_chLybb37aC9ofD_80-0cBqavT7ssYHFYGzmF5AK2X-oot2-Ekj28oqdcnshFJ6oGEkN1poD9Nrp1i2QjQB7UscjqkZQ3ONDXniQdF6RkvbOcTIjClfAlrncX9KNCFwa_xjVyBiKhYWs5lpJGFfr_e8e15uSC4aK434L6bRTRdHaKqhQYiJtUVNlw_AgMBAAGjTjBMMCkGA1UdDgQiBCALk1Ot-NUPYzG7YyJkFIE7kGnx3Wcip6EAsYMsIrjEwjAPBgNVHRMBAf8EBTADAQH_MA4GA1UdDwEB_wQEAwIBhjALBgkqhkiG9w0BAQsDggEBAFK6TaAORcwSnlG8az-bsC1oaLSEgrPTByJnsDB00kb0-8Qgj8mmddtxeRBCMXxPtubIIG39LD3oqdH46yWEMO7yWbiEoTQR4oZIhvn8p0f-DOgoyxJ3S86fD2_N5n-3S-SIa0eXtuc1r1iJxazQwDomlSW3sMTIvuKKugE9x3ytyT-vknAi-rm7m4gpFYDjpzJ34l4A3Fcyy3_kP0n4Aq4mxgyCC-8dVV3g6z5yL_ILwBAp5BfqFSy8xgN0qpE5n3luewDRjHELK_yNg3zOjzikeG9ADR-h9OyynDERb_l7-vc8EGfs4gUn9swx6cIrpeGGjiVZxfG6sMDsabYCziE="
+        krd_cert = "MIIDajCCAlSgAwIBAgIIGGYC2wHUAZAwCwYJKoZIhvcNAQELMFAxCzAJBgNVBAYTAkVHMQ4wDAYDVQQIDAVDYWlybzEOMAwGA1UEBwwFQ2Fpcm8xDzANBgNVBAoMBlBheW1vYjEQMA4GA1UEAwwHUm9vdC1DQTAeFw0yNTA5MTcwNzU3MjRaFw0yNjA5MTcwNzU3MjRaMFAxCzAJBgNVBAYTAkVHMQ4wDAYDVQQIDAVDYWlybzEOMAwGA1UEBwwFQ2Fpcm8xDzANBgNVBAoMBlBheW1vYjEQMA4GA1UEAwwHUm9vdC1DQTCCASAwCwYJKoZIhvcNAQEBA4IBDwAwggEKAoIBAQDY79hCukfKDNejbRa6hTKMozdBWan7LrwYBU0P5np1aJpdjOj261Tr-PIWKFjE4ZfES-bwZykZWYGBWOw4b94ZULtFc9E98r08R8gYfl9aCUM04YVwJrTSZVGwQy7S0U73iHiaZa7jE5iqXBHbrM_fWv_txu_chLybb37aC9ofD_80-0cBqavT7ssYHFYGzmF5AK2X-oot2-Ekj28oqdcnshFJ6oGEkN1poD9Nrp1i2QjQB7UscjqkZQ3ONDXniQdF6RkvbOcTIjClfAlrncX9KNCFwa_xjVyBiKhYWs5lpJGFfr_e8e15uSC4aK434L6bRTRdHaKqhQYiJtUVNlw_AgMBAAGjTjBMMCkGA1UdDgQiBCALk1Ot-NUPYzG7YyJkFIE7kGnx3Wcip6EAsYMsIrjEwjAPBgNVHRMBAf8EBTADAQH_MA4GA1UdDwEB_wQEAwIBhjALBgkqhkiG9w0BAQsDggEBAFK6TaAORcwSnlG8az-bsC1oaLSEgrPTByJnsDB00kb0-8Qgj8mmddtxeRBCMXxPtubIIG39LD3oqdH46yWEMO7yWbiEoTQR4oZIhvn8p0f-DOgoyxJ3S86fD2_N5n-3S-SIa0eXtuc1r1iJxazQwDomlSW3sMTIvuKKugE9x3ytyT-vknAi-rm7m4gpFYDjpzJ34l4A3Fcyy3_kP0n4Aq4mxgyCC-8dVV3g6z5yL_ILwBAp5BfqFSy8xgN0qpE5n3luewDRjHELK_yNg3zOjzikeG9ADR-h9OyynDERb_l7-vc8EGfs4gUn9swx6cIrpeGGjiVZxfG6sMDsabYCziE="
+        kdh_sk_lmk = "RDI1MTJTMEVTMDBFMDAwMDYxQjA3RTZBNTQyNzdCOTMyRjU4MDRERTk3NzhBMzRFM0VDQjVGQjQ0OEYzRDI2ODRFMDhBMjYyNjkzMUY4MUFGQ0Q0NjY0NjA1QUJDMUQwRDhGNzI2QjYxOEE4MzhFODA2OUQyNDgyQjRBOTk0QUY1MzZEMzkxQTBEMEY5OUM0ODk3NDI0NUMwNEJCN0MzQ0NBNEE2QTZFMzNBQzM0Mjg0ODlBMEIxRUEyOTE4Q0ZDQzFERDZFQUZEMUZEOEQzMTg3ODEzMjU0OEI4MTdEQTdCQ0JENDMwQzY2NjA5RjgwODYyMEQwMzBDRDVCN0JCM0ZBMDNCMzU0Q0VFQTcwREI1Q0E3NDAzNDI5NzdCOEM0RjhEN0UxQUNCMTFEOTgzNjZCNDg4OTJEQjU5RDc2QTEwOEU1QTdEODUwRTNGNTEzNTNGMzJBRkNFN0JBQTk2NTM2RDU3NzM3Q0I4MTk3RUM4MzFBN0E3QjI0OTk4MUZERkI0NkNCNjk0OUQ3OTFEN0ZBQTQ3QjEzNDA1MkRFRTY4MEU0RjJDNEI2MTA3N0VEMTRDQ0I0NkRFRjhEODhBODVGNjQ2NEVGQTRFMzBCNkJGMkFDNjRBQzk4OTg2MkI4QTQ4MDBERUEwQTJERTQ2QTJBMzg3NzVEMzIxRDU0RjRFNzQ3MUY0MkRDMDEzRTRCMTM3ODQxMTJDN0JBNEM2QUMwQTBGMjUwNUQ3QjI5OTdDMUY1MjVGNUM5MjM2MUYyOUU3QURGRTFERjM2NkUyQzZFRUEwRDI1NkI3NDZEMjFENTVGMTYxNzAzQjI0RjRBNjQ2NkYwQzRBNjI5MzlEN0UxRDU1QTRFQ0E0NjUyRkQ2MzhFREE0MjM3MDQ4QkQyQ0ZFMzQwREYzQkREQkY3NjE3OTUzRTFDRjhENzEwODQ0QTMxNTI0MkMzM0E2OUFGRUQyRTg5MTQyRDE4MTU5QzM3RkI2RDdGNDREMTA0NDBEMEZGQTg4MTI1MjUxMDZGQUE0Q0U3NEUzODBDMjY1RDI2RTYzNkMxQzA4QUY3RTNERTNDMjNEQUY2NDdDMTRBNkM0RjFERjU5NDUwRTA1QjgwMDgzQjUzMDVFRkUwNTI3MDNGNjFGM0FBODNCRDUwQ0IwMjA1NjQxQzdDMUM3MjA5NzQzN0JEMzJEMjYwM0UzMTQ0NjNEQzUwMDY5OTkyNUFBNDI0NUZCNkRENTVFRTY4QTlFODVBRTRCRDM3Q0U0OTJGNDkzOTA1RTJDMDMzMTExQTE2MDUwM0NEMUY2QjE2ODAyQ0MwOTEzMjAwOTIyQ0JDOTVGMkYyRDg1RTdGRjBENkZGMEJDNzg5RUIyMzFFM0RCRDVGMjFGRTg2Q0NBQzIxQTY2ODEwNTQ5QzE5QkYxMjQwNEFEMTUyRTMyM0U2NDJCQkU0NEUxNTY1RDBCMURFRTlFNjlBMzIxQjcxNDkzNzNCRjIyMUQ0MzRBNEYyMDQ3MUJBMzMyNDRFQkRFRTMyMjgyOEVDODM5OUNFM0QzMURENzQwQzk5MTJEN0YwNEY0RTcxN0EwNjc2RkQwQUQ4QUI5QjhDM0U5Q0RGRTFDRjk2NTk5M0QzN0FEQzRDMDMyMkZCNzNENTg5RkFFQzJDQjIwOTJEREU3OUM4MDEwQ0Y0RUNFMDMwRDhEMDk1RjI5QTg1QkY2MEFFODQ2RDUyOTY3RUJDQjE2QjE5ODZDM0FBNkQ2OUYyMjE2MUQ5Q0JGRUE2RDg4RTgzQUZCRjg3Njg4OTkyRTU4RkEwQUExNzQwOEU0QTc1MTg4RUFBODhDODVDODcyNDYwNDI4RkVGNDBFNzJCODcxNTgzRkYzOUNENzY3NjcyQjE4QTY4ODJDMThCMERGNTJGRTIyQjRGNEZGRjZFQzk2QzEyQjVCQjA0MjY3MjJDNjcyMzA0ODY5MTg4OTU2NTgxQjc2RTZFQkY1NUFCQzgyOEU2NTdGRUNGRkUzREU2RjgzMTQ2QzdCODgxMUJBNkJFRTgzMTIwRjdFQTMyRkFGNkQ0QTkyM0E1NzdCMzQ2M0U0Q0MxMEVBOTk2QkVGODM3NDVGQjgzN0ZGQ0YzNDY4REQzOENGOTdENENBRjAyOTZCRUNBMTAyM0Y4NjYxMUMzRDFBRjhCOUM4RjI0NjVDMUI0NzBGOUYyN0U3MTBDMzlCNTMzNjZBODM1QkEyMEFDNkVFMDY3OTI0NkM3REY1OEU1OURBNkEzODdBQzUzOTE4Mjg1Mjc1QjQxQUM4OTc3MDZDMzk4RDNERTYxOUM4MkUyNEFDOTIxQjQ3MjNGRDdDRTQyMjA4OTEzRDMxQjY5NzAzQzYwODhEMTgxMzhERTk1MTNEMEZEQjcyMUE2M0VFRTk1RDRBRkZBRTIxMjJFRDBDRDRBRDk2MzQzOUFFODUyQjJBOTMzMTgxQTk3NTlBQUI2NTI0MzU2ODYwNTRCREMwMDkwNEI0QUNGQTZCMzdDNTU4ODhCRDhDMkFCQjc0MjQ2NTQ1RTE4NzlFRDUzNDhEQkREOTdEMzg3OUI1NjJDMjQ0RTQzMkU2M0NBMEU3NDgxMDhCRUU4Q0Q3NTUyQ0Q2Mjc5NTQxRkNFMTFCOTdCNUFGMzcyRjRBNkEyODcwQ0JBNjcyMUMzNERFRDJEMkRBQTUwQ0QyNzRBODVCNDNGQkNDMTNCNDdBQTI1MzhFRUVFRkU4MzMyMjA4NkRBN0Q2MjMzQ0RGNUY3QkQ2QkU5NEU2RjFBODExOTkxNzJGQjA0ODY4RDU0RDZCRkVEQjhCN0YzM0JBQkY5Q0I3RkE2REJCMDA4NDMwMDUwQTVCQjFCREM3OTJEOTZCQjA5QjQwNDgzM0E4MUM3OEQ5MTlCRDE5NkI4RjFBMURGQUMxMTMwMzY2Qjk0RjkzNjE3QTQ1NkQ0ODA5RkM3NjE4QzRCOTkzOURBMkFENDUwNzE3MDhGODNGODhDRTg4NEVDNUI1M0VDQUVDMEJFQTU0NzRGQTA5OURDNjg3MTAzRkE4NzUxMjhGNzFBMDVBREZFNkI5NTdDMEJGRUVGNTdDQjQ2OUUyQkVGNDE2NzYyN0Y4NTAwRDVEQUQ4RDAyMENCRTZCMDVGQkRBNTIwRTc0OUFERDEwM0NCNjM2MUI3RTBGQ0ZDQzQxRDI3OUUyMjk1MEM0Q0UzQkY4QzAwRTlERTYzNzA2RUJBRDIyRkFGQjU3QUQ0QTM2MjJFRTY3RDQ1NjBCNzE2NjY5Q0Y4RTNGODJBNjIxQjU0NTZGRDk1MjU2QTZBMjM4QUUyQkFEN0I4NjlBNzYzMTU3NzQwOTEwNTFGQjQ2MTNERDIxQjNBNTVCMw=="
+        kcv = "123456"
+        ed = await self._exp_tr34(kbpk, kcv, kdh_cert, krd_cert, kdh_sk_lmk)
+        assert len(ed) > 0
+        assert isinstance(ed, str)
+
+    @pytest.mark.asyncio
+    async def test_key_gen(self):
+        key_type = "BDK"
+        use_mode = "DERIV"
+        algo = "A128"
+        key_lmk, kcv = await self._key_gen(key_type, use_mode, algo)
+        assert len(key_lmk) > 0
+        assert isinstance(key_lmk, str)
+        assert len(kcv) > 0
+        assert isinstance(kcv, str)
+
+    @pytest.mark.asyncio
+    async def test_kcv_gen(self):
+        key_lmk = "RDAxMTJEMEFCMDBFMDAwMEQ0MkRFOEU5MjU4RjkyOTBDMTJDQUQwQjZEM0JCMDk0MjBDRkFBMTMwNTY3REExODUzMEU0MTM2MTJFQzA5MUYyM0JFMjg0RTNDQkYxOTFBNkM0NURERkY5RDJCQUExMg=="
+        kcv = await self._kcv_gen(key_lmk)
+        assert len(kcv) > 0
+        assert isinstance(kcv, str)
+
+    @pytest.mark.asyncio
+    async def test_ipek_derive(self):
+        bdk_lmk = "RDAxMTJEMEFCMDBFMDAwMEQ0MkRFOEU5MjU4RjkyOTBDMTJDQUQwQjZEM0JCMDk0MjBDRkFBMTMwNTY3REExODUzMEU0MTM2MTJFQzA5MUYyM0JFMjg0RTNDQkYxOTFBNkM0NURERkY5RDJCQUExMg=="
+        iksn = "123456789012345600000000"
+        algo = "A128"
+        use_mode = "DERIV"
+        ipek_lmk, kcv = await self._ipek_derive(bdk_lmk, iksn, algo, use_mode)
+        assert len(ipek_lmk) > 0
+        assert isinstance(ipek_lmk, str)
+        assert len(kcv) > 0
+        assert isinstance(kcv, str)
+
+    @pytest.mark.asyncio
+    async def test_data_encr(self):
+        key_lmk = "RDAxMTJEMEFCMDBFMDAwMEQ0MkRFOEU5MjU4RjkyOTBDMTJDQUQwQjZEM0JCMDk0MjBDRkFBMTMwNTY3REExODUzMEU0MTM2MTJFQzA5MUYyM0JFMjg0RTNDQkYxOTFBNkM0NURERkY5RDJCQUExMg=="
+        encr_mode = "CBC"
+        iv = "1234567812345678"
+        msg = "1234567812345678"
+        algo = "A128"
+        encr_msg = await self._data_encr(key_lmk, encr_mode, iv, msg, algo)
+        assert len(encr_msg) > 0
+        assert isinstance(encr_msg, str)
+    
+    @pytest.mark.asyncio
+    async def test_data_decr(self):
+        key_lmk = "RDAxMTJEMEFCMDBFMDAwMEQ0MkRFOEU5MjU4RjkyOTBDMTJDQUQwQjZEM0JCMDk0MjBDRkFBMTMwNTY3REExODUzMEU0MTM2MTJFQzA5MUYyM0JFMjg0RTNDQkYxOTFBNkM0NURERkY5RDJCQUExMg=="
+        iv = "1234567812345678"
+        encr_mode = "CBC"
+        encr_msg = "a252f698cfddc8fdef524419b02ff72e"
+        algo = "A128"
+        msg = await self._data_decr(key_lmk, encr_mode, iv, encr_msg, algo)
+        assert len(msg) > 0
+        assert isinstance(msg, str)
+
+    @pytest.mark.asyncio
+    async def test_mac_gen(self):
+        key_lmk = "RDAxMTJEMEFCMDBFMDAwMEQ0MkRFOEU5MjU4RjkyOTBDMTJDQUQwQjZEM0JCMDk0MjBDRkFBMTMwNTY3REExODUzMEU0MTM2MTJFQzA5MUYyM0JFMjg0RTNDQkYxOTFBNkM0NURERkY5RDJCQUExMg=="
+        mac_mode = "GENERATE"
+        msg = "1234567812345678"
+        mac = await self._mac(key_lmk, mac_mode, msg)
+        assert len(mac) > 0
+        assert isinstance(mac, str)
+
+    # TODO: mac verif
+
+    @pytest.mark.asyncio
+    async def test_trans_pin(self):
+        key_lmk = "RDAxNDREMEFCMDBFMDAwMEFCOUEyM0UzMTFDNjdDMDlCNjdCRTQ4Mzk2RUZFMUVBOUVGRTdGNDc1QkU4N0I1QTM1MzdGRTU4MkNCQkNEN0VDNDRDQ0Y0RTQxNkUwOTYzMkVENUJBNDUzRjdEQ0MyNjU1NzcyM0FFRjY2Q0FCRDFGMDJEOThBQzMwODJFOTQx"
+        src_pinblk = "2200d9fd5c940538949f1e6f7d14e676"
+        dest_key = "RDAxMTJQMFRFMDBOMDAwMDIzRTlERTgwMTI0QzMyMTZEN0FBNzNEQjFDQ0U2NkYxN0ZBRjEwNDYxOUM3RDc4QTIzM0I3QjQyRjUyMUU2QzkxNzM0RkY3QjZCMUZFMTYzRDYxQzczNTE1QzY3ODMxNA=="
+        ksn = "123456789012345600000005"
+        pan = "4111111111111111"
+        dest_pinblk = await self._trans_pin(key_lmk, src_pinblk, dest_key, ksn, pan)
+        assert dest_pinblk is not None
+        assert len(dest_pinblk) > 0
+
+    @pytest.mark.asyncio
+    async def test_key_wrap(self):
+        kbpk = "ZGZiOWJmMzQ4Y2MxMjk4NThjYjM3YzczNjI3ZjZiM2I="
+        key = "MjM5MkY3RUZFMEZENjE3OTczMDE4NjgzNjczRUExNDM="
+        algo = "A128"
+        key_kbpk = await self._wrap(kbpk, key, algo)
+        assert len(key_kbpk) > 0
+        assert isinstance(key_kbpk, str)
+    
+    @pytest.mark.asyncio
+    async def test_key_unwrap(self):
+        kbpk = "ZGZiOWJmMzQ4Y2MxMjk4NThjYjM3YzczNjI3ZjZiM2I="
+        key_kbpk = "RDAxNDREMEFCMDBFMDAwMEE5OTg1MzE2Qzc5N0NGNTc4NDZBOEM3NDc4ODU1MTg3NTNFNEZEOUE3MzY1OTYwQTA0RDNERUY5OTcwREQ0MzFEQjhCQzVBNjg4MzE5REY5RDYwOEIxRDRCQTE2MEUwNDNDOTg2MUMwMkMyRkM1QTY1NDBCMTBGNzIwMTdBOEJG"
+        key = await self._unwrap(key_kbpk, kbpk)
+        assert len(key) > 0
+        assert isinstance(key, str)
+
+    # ep methods for pki service
+    @pytest.mark.asyncio
+    async def test_pki_health_check(self):
+        url = pki_url + "/health" + query_param
+        resp = await exchange(url, body={}, method="GET")
+        if resp:
+            message = resp['message']
+            assert len(message) > 0
+            assert isinstance(message, str)
+
+    @pytest.mark.asyncio
+    async def test_cert_create_ecp256(self):
+        csr = "MIIBCTCBsAIBADBQMQswCQYDVQQGEwJFRzEOMAwGA1UECAwFQ2Fpcm8xDjAMBgNVBAcMBUNhaXJvMQ8wDQYDVQQKDAZQYXltb2IxEDAOBgNVBAMMB1Jvb3QtQ0EwWTATBgcqhkjOPQIBBggqhkjOPQMBBwNCAAT7I2NbVKqceyJwCqu7NWKn3GS_75lgOhPMrmiv6s9MASgZqaKrsGok0GoKmAvygXM3IWWr_HFhLlxvXmkWrGn3MAoGCCqGSM49BAMCA0gAMEUCIFtVH0mZNM968gRvPPGrnU2o7rzltwHsOxoe14Fq3gnUAiEAuUnFuwzLEqygQvbfkMbrFmwozfRBxeimGro2D79kntI="
+        sk_lmk = "RDAzMzZTMEVTMDBFMDAwMDAyODkwQjAxMzM5MzRGOUZBQjVDNjg0ODhCQjVBMzI3N0I0OUM3RTlGOTk1MDhEOUYyMzg3OTNFREJDQjlBNDlDN0E2NUE2OTQzM0QwMEJDMTVFRDcwNzMzRTI1OUNGRTBGNkMwNDgyMzhBMTVBOEUwODg0NDFDMTg3NzVDNDc5OEFBQjA2RUZDOEI2ODg3MEVGRkU1MjEyQTEzQzc1QkY5RUQ5NkExOEZENjMwM0I1NUIwNTA3Qjg5OEE3NzAzMEZBOTU2MUY4REExQTExRjEwQ0JGMDU2OEVEQUIwRTcwQjk3MUIyRDYyNjdBRUEwNkMzOUM3MzREQkFENDA1QkY2OENCMEUzMDc0MzAxMkRFNTA4NDQ4MTEzNEIzQkUzRDI5OTkwMTE1Q0QwMEZGNjE2RjE4OTlEMzQyOTBDNzVC"
+        cert = await self._cert_create("ECP256", "ROOT_CA", csr, sk_lmk)
+        assert len(cert) > 0
+        assert isinstance(cert, str)
+
+    @pytest.mark.asyncio    
+    async def test_cert_create_r2k(self):
+        csr = "MIICkTCCAXkCAQAwUDELMAkGA1UEBhMCRUcxDjAMBgNVBAgMBUNhaXJvMQ4wDAYDVQQHDAVDYWlybzEPMA0GA1UECgwGUGF5bW9iMRAwDgYDVQQDDAdSb290LUNBMIIBIDALBgkqhkiG9w0BAQEDggEPADCCAQoCggEBANjv2EK6R8oM16NtFrqFMoyjN0FZqfsuvBgFTQ_menVoml2M6PbrVOv48hYoWMThl8RL5vBnKRlZgYFY7Dhv3hlQu0Vz0T3yvTxHyBh-X1oJQzThhXAmtNJlUbBDLtLRTveIeJplruMTmKpcEdusz99a_-3G79yEvJtvftoL2h8P_zT7RwGpq9PuyxgcVgbOYXkArZf6ii3b4SSPbyip1yeyEUnqgYSQ3WmgP02unWLZCNAHtSxyOqRlDc40NeeJB0XpGS9s5xMiMKV8CWudxf0o0IXBr_GNXIGIqFhazmWkkYV-v97x7Xm5ILhorjfgvptFNF0doqqFBiIm1RU2XD8CAwEAATANBgkqhkiG9w0BAQsFAAOCAQEAZohUMVNnZNRTjVHDkGAI5dMDu2OT-7HbnHnZIvVMTuirU1mQ_Ri0oT5rZNCPaoe4Zt8OoInk72FiifesNsBYLEH4jXSctRGnoVgmAvyhyenEbG171xOl7roBn2fwBFT4URa5jABJ1orMfuOCQas6ZPy8B4-Sw-hR9v_frX8Uc0fycCm8qyg-p_X7CCx1JuahZOwnIcet1Tq-QXoLjq0liiMmNv-79oPKca17Mxhmgg9ko2NbEAcyYyiGOdhwsArMGd2VFXjT4NLd_8t6IJpPEoYFUlzkdjXP3SHcSLWIBwYvn1GpiYt6UViO7KEz1W9Muk4RVE5insR3QPjAZTlaag=="
+        sk_lmk = "RDI1MTJTMEVTMDBFMDAwMDYxQjA3RTZBNTQyNzdCOTMyRjU4MDRERTk3NzhBMzRFM0VDQjVGQjQ0OEYzRDI2ODRFMDhBMjYyNjkzMUY4MUFGQ0Q0NjY0NjA1QUJDMUQwRDhGNzI2QjYxOEE4MzhFODA2OUQyNDgyQjRBOTk0QUY1MzZEMzkxQTBEMEY5OUM0ODk3NDI0NUMwNEJCN0MzQ0NBNEE2QTZFMzNBQzM0Mjg0ODlBMEIxRUEyOTE4Q0ZDQzFERDZFQUZEMUZEOEQzMTg3ODEzMjU0OEI4MTdEQTdCQ0JENDMwQzY2NjA5RjgwODYyMEQwMzBDRDVCN0JCM0ZBMDNCMzU0Q0VFQTcwREI1Q0E3NDAzNDI5NzdCOEM0RjhEN0UxQUNCMTFEOTgzNjZCNDg4OTJEQjU5RDc2QTEwOEU1QTdEODUwRTNGNTEzNTNGMzJBRkNFN0JBQTk2NTM2RDU3NzM3Q0I4MTk3RUM4MzFBN0E3QjI0OTk4MUZERkI0NkNCNjk0OUQ3OTFEN0ZBQTQ3QjEzNDA1MkRFRTY4MEU0RjJDNEI2MTA3N0VEMTRDQ0I0NkRFRjhEODhBODVGNjQ2NEVGQTRFMzBCNkJGMkFDNjRBQzk4OTg2MkI4QTQ4MDBERUEwQTJERTQ2QTJBMzg3NzVEMzIxRDU0RjRFNzQ3MUY0MkRDMDEzRTRCMTM3ODQxMTJDN0JBNEM2QUMwQTBGMjUwNUQ3QjI5OTdDMUY1MjVGNUM5MjM2MUYyOUU3QURGRTFERjM2NkUyQzZFRUEwRDI1NkI3NDZEMjFENTVGMTYxNzAzQjI0RjRBNjQ2NkYwQzRBNjI5MzlEN0UxRDU1QTRFQ0E0NjUyRkQ2MzhFREE0MjM3MDQ4QkQyQ0ZFMzQwREYzQkREQkY3NjE3OTUzRTFDRjhENzEwODQ0QTMxNTI0MkMzM0E2OUFGRUQyRTg5MTQyRDE4MTU5QzM3RkI2RDdGNDREMTA0NDBEMEZGQTg4MTI1MjUxMDZGQUE0Q0U3NEUzODBDMjY1RDI2RTYzNkMxQzA4QUY3RTNERTNDMjNEQUY2NDdDMTRBNkM0RjFERjU5NDUwRTA1QjgwMDgzQjUzMDVFRkUwNTI3MDNGNjFGM0FBODNCRDUwQ0IwMjA1NjQxQzdDMUM3MjA5NzQzN0JEMzJEMjYwM0UzMTQ0NjNEQzUwMDY5OTkyNUFBNDI0NUZCNkRENTVFRTY4QTlFODVBRTRCRDM3Q0U0OTJGNDkzOTA1RTJDMDMzMTExQTE2MDUwM0NEMUY2QjE2ODAyQ0MwOTEzMjAwOTIyQ0JDOTVGMkYyRDg1RTdGRjBENkZGMEJDNzg5RUIyMzFFM0RCRDVGMjFGRTg2Q0NBQzIxQTY2ODEwNTQ5QzE5QkYxMjQwNEFEMTUyRTMyM0U2NDJCQkU0NEUxNTY1RDBCMURFRTlFNjlBMzIxQjcxNDkzNzNCRjIyMUQ0MzRBNEYyMDQ3MUJBMzMyNDRFQkRFRTMyMjgyOEVDODM5OUNFM0QzMURENzQwQzk5MTJEN0YwNEY0RTcxN0EwNjc2RkQwQUQ4QUI5QjhDM0U5Q0RGRTFDRjk2NTk5M0QzN0FEQzRDMDMyMkZCNzNENTg5RkFFQzJDQjIwOTJEREU3OUM4MDEwQ0Y0RUNFMDMwRDhEMDk1RjI5QTg1QkY2MEFFODQ2RDUyOTY3RUJDQjE2QjE5ODZDM0FBNkQ2OUYyMjE2MUQ5Q0JGRUE2RDg4RTgzQUZCRjg3Njg4OTkyRTU4RkEwQUExNzQwOEU0QTc1MTg4RUFBODhDODVDODcyNDYwNDI4RkVGNDBFNzJCODcxNTgzRkYzOUNENzY3NjcyQjE4QTY4ODJDMThCMERGNTJGRTIyQjRGNEZGRjZFQzk2QzEyQjVCQjA0MjY3MjJDNjcyMzA0ODY5MTg4OTU2NTgxQjc2RTZFQkY1NUFCQzgyOEU2NTdGRUNGRkUzREU2RjgzMTQ2QzdCODgxMUJBNkJFRTgzMTIwRjdFQTMyRkFGNkQ0QTkyM0E1NzdCMzQ2M0U0Q0MxMEVBOTk2QkVGODM3NDVGQjgzN0ZGQ0YzNDY4REQzOENGOTdENENBRjAyOTZCRUNBMTAyM0Y4NjYxMUMzRDFBRjhCOUM4RjI0NjVDMUI0NzBGOUYyN0U3MTBDMzlCNTMzNjZBODM1QkEyMEFDNkVFMDY3OTI0NkM3REY1OEU1OURBNkEzODdBQzUzOTE4Mjg1Mjc1QjQxQUM4OTc3MDZDMzk4RDNERTYxOUM4MkUyNEFDOTIxQjQ3MjNGRDdDRTQyMjA4OTEzRDMxQjY5NzAzQzYwODhEMTgxMzhERTk1MTNEMEZEQjcyMUE2M0VFRTk1RDRBRkZBRTIxMjJFRDBDRDRBRDk2MzQzOUFFODUyQjJBOTMzMTgxQTk3NTlBQUI2NTI0MzU2ODYwNTRCREMwMDkwNEI0QUNGQTZCMzdDNTU4ODhCRDhDMkFCQjc0MjQ2NTQ1RTE4NzlFRDUzNDhEQkREOTdEMzg3OUI1NjJDMjQ0RTQzMkU2M0NBMEU3NDgxMDhCRUU4Q0Q3NTUyQ0Q2Mjc5NTQxRkNFMTFCOTdCNUFGMzcyRjRBNkEyODcwQ0JBNjcyMUMzNERFRDJEMkRBQTUwQ0QyNzRBODVCNDNGQkNDMTNCNDdBQTI1MzhFRUVFRkU4MzMyMjA4NkRBN0Q2MjMzQ0RGNUY3QkQ2QkU5NEU2RjFBODExOTkxNzJGQjA0ODY4RDU0RDZCRkVEQjhCN0YzM0JBQkY5Q0I3RkE2REJCMDA4NDMwMDUwQTVCQjFCREM3OTJEOTZCQjA5QjQwNDgzM0E4MUM3OEQ5MTlCRDE5NkI4RjFBMURGQUMxMTMwMzY2Qjk0RjkzNjE3QTQ1NkQ0ODA5RkM3NjE4QzRCOTkzOURBMkFENDUwNzE3MDhGODNGODhDRTg4NEVDNUI1M0VDQUVDMEJFQTU0NzRGQTA5OURDNjg3MTAzRkE4NzUxMjhGNzFBMDVBREZFNkI5NTdDMEJGRUVGNTdDQjQ2OUUyQkVGNDE2NzYyN0Y4NTAwRDVEQUQ4RDAyMENCRTZCMDVGQkRBNTIwRTc0OUFERDEwM0NCNjM2MUI3RTBGQ0ZDQzQxRDI3OUUyMjk1MEM0Q0UzQkY4QzAwRTlERTYzNzA2RUJBRDIyRkFGQjU3QUQ0QTM2MjJFRTY3RDQ1NjBCNzE2NjY5Q0Y4RTNGODJBNjIxQjU0NTZGRDk1MjU2QTZBMjM4QUUyQkFEN0I4NjlBNzYzMTU3NzQwOTEwNTFGQjQ2MTNERDIxQjNBNTVCMw=="
+        cert = await self._cert_create("R2K", "ROOT_CA", csr, sk_lmk)
+        assert len(cert) > 0
+        assert isinstance(cert, str)
+    
+    @pytest.mark.asyncio
+    async def test_cert_renew_r2k(self):
+        cert = "MIIDajCCAlSgAwIBAgIIGGYC2wHUAZAwCwYJKoZIhvcNAQELMFAxCzAJBgNVBAYTAkVHMQ4wDAYDVQQIDAVDYWlybzEOMAwGA1UEBwwFQ2Fpcm8xDzANBgNVBAoMBlBheW1vYjEQMA4GA1UEAwwHUm9vdC1DQTAeFw0yNTA5MTcwNzU3MjRaFw0yNjA5MTcwNzU3MjRaMFAxCzAJBgNVBAYTAkVHMQ4wDAYDVQQIDAVDYWlybzEOMAwGA1UEBwwFQ2Fpcm8xDzANBgNVBAoMBlBheW1vYjEQMA4GA1UEAwwHUm9vdC1DQTCCASAwCwYJKoZIhvcNAQEBA4IBDwAwggEKAoIBAQDY79hCukfKDNejbRa6hTKMozdBWan7LrwYBU0P5np1aJpdjOj261Tr-PIWKFjE4ZfES-bwZykZWYGBWOw4b94ZULtFc9E98r08R8gYfl9aCUM04YVwJrTSZVGwQy7S0U73iHiaZa7jE5iqXBHbrM_fWv_txu_chLybb37aC9ofD_80-0cBqavT7ssYHFYGzmF5AK2X-oot2-Ekj28oqdcnshFJ6oGEkN1poD9Nrp1i2QjQB7UscjqkZQ3ONDXniQdF6RkvbOcTIjClfAlrncX9KNCFwa_xjVyBiKhYWs5lpJGFfr_e8e15uSC4aK434L6bRTRdHaKqhQYiJtUVNlw_AgMBAAGjTjBMMCkGA1UdDgQiBCALk1Ot-NUPYzG7YyJkFIE7kGnx3Wcip6EAsYMsIrjEwjAPBgNVHRMBAf8EBTADAQH_MA4GA1UdDwEB_wQEAwIBhjALBgkqhkiG9w0BAQsDggEBAFK6TaAORcwSnlG8az-bsC1oaLSEgrPTByJnsDB00kb0-8Qgj8mmddtxeRBCMXxPtubIIG39LD3oqdH46yWEMO7yWbiEoTQR4oZIhvn8p0f-DOgoyxJ3S86fD2_N5n-3S-SIa0eXtuc1r1iJxazQwDomlSW3sMTIvuKKugE9x3ytyT-vknAi-rm7m4gpFYDjpzJ34l4A3Fcyy3_kP0n4Aq4mxgyCC-8dVV3g6z5yL_ILwBAp5BfqFSy8xgN0qpE5n3luewDRjHELK_yNg3zOjzikeG9ADR-h9OyynDERb_l7-vc8EGfs4gUn9swx6cIrpeGGjiVZxfG6sMDsabYCziE="
+        sk_lmk = "RDI1MTJTMEVTMDBFMDAwMDYxQjA3RTZBNTQyNzdCOTMyRjU4MDRERTk3NzhBMzRFM0VDQjVGQjQ0OEYzRDI2ODRFMDhBMjYyNjkzMUY4MUFGQ0Q0NjY0NjA1QUJDMUQwRDhGNzI2QjYxOEE4MzhFODA2OUQyNDgyQjRBOTk0QUY1MzZEMzkxQTBEMEY5OUM0ODk3NDI0NUMwNEJCN0MzQ0NBNEE2QTZFMzNBQzM0Mjg0ODlBMEIxRUEyOTE4Q0ZDQzFERDZFQUZEMUZEOEQzMTg3ODEzMjU0OEI4MTdEQTdCQ0JENDMwQzY2NjA5RjgwODYyMEQwMzBDRDVCN0JCM0ZBMDNCMzU0Q0VFQTcwREI1Q0E3NDAzNDI5NzdCOEM0RjhEN0UxQUNCMTFEOTgzNjZCNDg4OTJEQjU5RDc2QTEwOEU1QTdEODUwRTNGNTEzNTNGMzJBRkNFN0JBQTk2NTM2RDU3NzM3Q0I4MTk3RUM4MzFBN0E3QjI0OTk4MUZERkI0NkNCNjk0OUQ3OTFEN0ZBQTQ3QjEzNDA1MkRFRTY4MEU0RjJDNEI2MTA3N0VEMTRDQ0I0NkRFRjhEODhBODVGNjQ2NEVGQTRFMzBCNkJGMkFDNjRBQzk4OTg2MkI4QTQ4MDBERUEwQTJERTQ2QTJBMzg3NzVEMzIxRDU0RjRFNzQ3MUY0MkRDMDEzRTRCMTM3ODQxMTJDN0JBNEM2QUMwQTBGMjUwNUQ3QjI5OTdDMUY1MjVGNUM5MjM2MUYyOUU3QURGRTFERjM2NkUyQzZFRUEwRDI1NkI3NDZEMjFENTVGMTYxNzAzQjI0RjRBNjQ2NkYwQzRBNjI5MzlEN0UxRDU1QTRFQ0E0NjUyRkQ2MzhFREE0MjM3MDQ4QkQyQ0ZFMzQwREYzQkREQkY3NjE3OTUzRTFDRjhENzEwODQ0QTMxNTI0MkMzM0E2OUFGRUQyRTg5MTQyRDE4MTU5QzM3RkI2RDdGNDREMTA0NDBEMEZGQTg4MTI1MjUxMDZGQUE0Q0U3NEUzODBDMjY1RDI2RTYzNkMxQzA4QUY3RTNERTNDMjNEQUY2NDdDMTRBNkM0RjFERjU5NDUwRTA1QjgwMDgzQjUzMDVFRkUwNTI3MDNGNjFGM0FBODNCRDUwQ0IwMjA1NjQxQzdDMUM3MjA5NzQzN0JEMzJEMjYwM0UzMTQ0NjNEQzUwMDY5OTkyNUFBNDI0NUZCNkRENTVFRTY4QTlFODVBRTRCRDM3Q0U0OTJGNDkzOTA1RTJDMDMzMTExQTE2MDUwM0NEMUY2QjE2ODAyQ0MwOTEzMjAwOTIyQ0JDOTVGMkYyRDg1RTdGRjBENkZGMEJDNzg5RUIyMzFFM0RCRDVGMjFGRTg2Q0NBQzIxQTY2ODEwNTQ5QzE5QkYxMjQwNEFEMTUyRTMyM0U2NDJCQkU0NEUxNTY1RDBCMURFRTlFNjlBMzIxQjcxNDkzNzNCRjIyMUQ0MzRBNEYyMDQ3MUJBMzMyNDRFQkRFRTMyMjgyOEVDODM5OUNFM0QzMURENzQwQzk5MTJEN0YwNEY0RTcxN0EwNjc2RkQwQUQ4QUI5QjhDM0U5Q0RGRTFDRjk2NTk5M0QzN0FEQzRDMDMyMkZCNzNENTg5RkFFQzJDQjIwOTJEREU3OUM4MDEwQ0Y0RUNFMDMwRDhEMDk1RjI5QTg1QkY2MEFFODQ2RDUyOTY3RUJDQjE2QjE5ODZDM0FBNkQ2OUYyMjE2MUQ5Q0JGRUE2RDg4RTgzQUZCRjg3Njg4OTkyRTU4RkEwQUExNzQwOEU0QTc1MTg4RUFBODhDODVDODcyNDYwNDI4RkVGNDBFNzJCODcxNTgzRkYzOUNENzY3NjcyQjE4QTY4ODJDMThCMERGNTJGRTIyQjRGNEZGRjZFQzk2QzEyQjVCQjA0MjY3MjJDNjcyMzA0ODY5MTg4OTU2NTgxQjc2RTZFQkY1NUFCQzgyOEU2NTdGRUNGRkUzREU2RjgzMTQ2QzdCODgxMUJBNkJFRTgzMTIwRjdFQTMyRkFGNkQ0QTkyM0E1NzdCMzQ2M0U0Q0MxMEVBOTk2QkVGODM3NDVGQjgzN0ZGQ0YzNDY4REQzOENGOTdENENBRjAyOTZCRUNBMTAyM0Y4NjYxMUMzRDFBRjhCOUM4RjI0NjVDMUI0NzBGOUYyN0U3MTBDMzlCNTMzNjZBODM1QkEyMEFDNkVFMDY3OTI0NkM3REY1OEU1OURBNkEzODdBQzUzOTE4Mjg1Mjc1QjQxQUM4OTc3MDZDMzk4RDNERTYxOUM4MkUyNEFDOTIxQjQ3MjNGRDdDRTQyMjA4OTEzRDMxQjY5NzAzQzYwODhEMTgxMzhERTk1MTNEMEZEQjcyMUE2M0VFRTk1RDRBRkZBRTIxMjJFRDBDRDRBRDk2MzQzOUFFODUyQjJBOTMzMTgxQTk3NTlBQUI2NTI0MzU2ODYwNTRCREMwMDkwNEI0QUNGQTZCMzdDNTU4ODhCRDhDMkFCQjc0MjQ2NTQ1RTE4NzlFRDUzNDhEQkREOTdEMzg3OUI1NjJDMjQ0RTQzMkU2M0NBMEU3NDgxMDhCRUU4Q0Q3NTUyQ0Q2Mjc5NTQxRkNFMTFCOTdCNUFGMzcyRjRBNkEyODcwQ0JBNjcyMUMzNERFRDJEMkRBQTUwQ0QyNzRBODVCNDNGQkNDMTNCNDdBQTI1MzhFRUVFRkU4MzMyMjA4NkRBN0Q2MjMzQ0RGNUY3QkQ2QkU5NEU2RjFBODExOTkxNzJGQjA0ODY4RDU0RDZCRkVEQjhCN0YzM0JBQkY5Q0I3RkE2REJCMDA4NDMwMDUwQTVCQjFCREM3OTJEOTZCQjA5QjQwNDgzM0E4MUM3OEQ5MTlCRDE5NkI4RjFBMURGQUMxMTMwMzY2Qjk0RjkzNjE3QTQ1NkQ0ODA5RkM3NjE4QzRCOTkzOURBMkFENDUwNzE3MDhGODNGODhDRTg4NEVDNUI1M0VDQUVDMEJFQTU0NzRGQTA5OURDNjg3MTAzRkE4NzUxMjhGNzFBMDVBREZFNkI5NTdDMEJGRUVGNTdDQjQ2OUUyQkVGNDE2NzYyN0Y4NTAwRDVEQUQ4RDAyMENCRTZCMDVGQkRBNTIwRTc0OUFERDEwM0NCNjM2MUI3RTBGQ0ZDQzQxRDI3OUUyMjk1MEM0Q0UzQkY4QzAwRTlERTYzNzA2RUJBRDIyRkFGQjU3QUQ0QTM2MjJFRTY3RDQ1NjBCNzE2NjY5Q0Y4RTNGODJBNjIxQjU0NTZGRDk1MjU2QTZBMjM4QUUyQkFEN0I4NjlBNzYzMTU3NzQwOTEwNTFGQjQ2MTNERDIxQjNBNTVCMw=="
+        renewed_cert = await self._cert_renew("R2K", "ROOT_CA", cert, sk_lmk)
+        assert len(renewed_cert) > 0
+        assert isinstance(renewed_cert, str)
+
+    @pytest.mark.asyncio
+    async def test_cert_renew_ecp256(self):
+        cert = "MIIB5DCCAYqgAwIBAgIIGGYCNn1JNogwCgYIKoZIzj0EAwIwUDELMAkGA1UEBhMCRUcxDjAMBgNVBAgMBUNhaXJvMQ4wDAYDVQQHDAVDYWlybzEPMA0GA1UECgwGUGF5bW9iMRAwDgYDVQQDDAdSb290LUNBMB4XDTI1MDkxNzA3NDUzN1oXDTI2MDkxNzA3NDUzN1owUDELMAkGA1UEBhMCRUcxDjAMBgNVBAgMBUNhaXJvMQ4wDAYDVQQHDAVDYWlybzEPMA0GA1UECgwGUGF5bW9iMRAwDgYDVQQDDAdSb290LUNBMFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAE-yNjW1SqnHsicAqruzVip9xkv--ZYDoTzK5or-rPTAEoGamiq7BqJNBqCpgL8oFzNyFlq_xxYS5cb15pFqxp96NOMEwwKQYDVR0OBCIEIJlosxhE-WkP6LperxAiu9zbPfSJgsXHlPRalfClsZdLMA8GA1UdEwEB_wQFMAMBAf8wDgYDVR0PAQH_BAQDAgGGMAoGCCqGSM49BAMCA0gAMEUCIQDsTLUn9P5MMZUSGrAR57Np4IKU4AGf-ig04IddVpXrugIgG_kdu2Haz_HJJuu1z-DrBkrdAAl8q9Zr2n09431jP3M="
+        sk_lmk = "RDAzMzZTMEVTMDBFMDAwMDAyODkwQjAxMzM5MzRGOUZBQjVDNjg0ODhCQjVBMzI3N0I0OUM3RTlGOTk1MDhEOUYyMzg3OTNFREJDQjlBNDlDN0E2NUE2OTQzM0QwMEJDMTVFRDcwNzMzRTI1OUNGRTBGNkMwNDgyMzhBMTVBOEUwODg0NDFDMTg3NzVDNDc5OEFBQjA2RUZDOEI2ODg3MEVGRkU1MjEyQTEzQzc1QkY5RUQ5NkExOEZENjMwM0I1NUIwNTA3Qjg5OEE3NzAzMEZBOTU2MUY4REExQTExRjEwQ0JGMDU2OEVEQUIwRTcwQjk3MUIyRDYyNjdBRUEwNkMzOUM3MzREQkFENDA1QkY2OENCMEUzMDc0MzAxMkRFNTA4NDQ4MTEzNEIzQkUzRDI5OTkwMTE1Q0QwMEZGNjE2RjE4OTlEMzQyOTBDNzVC"
+        renewed_cert = await self._cert_renew("ECP256", "ROOT_CA", cert, sk_lmk)
+        assert len(renewed_cert) > 0
+        assert isinstance(renewed_cert, str)
+
+    @pytest.mark.asyncio
+    async def test_crl_r2k(self):
+        cert = "MIIDajCCAlSgAwIBAgIIGGYC2wHUAZAwCwYJKoZIhvcNAQELMFAxCzAJBgNVBAYTAkVHMQ4wDAYDVQQIDAVDYWlybzEOMAwGA1UEBwwFQ2Fpcm8xDzANBgNVBAoMBlBheW1vYjEQMA4GA1UEAwwHUm9vdC1DQTAeFw0yNTA5MTcwNzU3MjRaFw0yNjA5MTcwNzU3MjRaMFAxCzAJBgNVBAYTAkVHMQ4wDAYDVQQIDAVDYWlybzEOMAwGA1UEBwwFQ2Fpcm8xDzANBgNVBAoMBlBheW1vYjEQMA4GA1UEAwwHUm9vdC1DQTCCASAwCwYJKoZIhvcNAQEBA4IBDwAwggEKAoIBAQDY79hCukfKDNejbRa6hTKMozdBWan7LrwYBU0P5np1aJpdjOj261Tr-PIWKFjE4ZfES-bwZykZWYGBWOw4b94ZULtFc9E98r08R8gYfl9aCUM04YVwJrTSZVGwQy7S0U73iHiaZa7jE5iqXBHbrM_fWv_txu_chLybb37aC9ofD_80-0cBqavT7ssYHFYGzmF5AK2X-oot2-Ekj28oqdcnshFJ6oGEkN1poD9Nrp1i2QjQB7UscjqkZQ3ONDXniQdF6RkvbOcTIjClfAlrncX9KNCFwa_xjVyBiKhYWs5lpJGFfr_e8e15uSC4aK434L6bRTRdHaKqhQYiJtUVNlw_AgMBAAGjTjBMMCkGA1UdDgQiBCALk1Ot-NUPYzG7YyJkFIE7kGnx3Wcip6EAsYMsIrjEwjAPBgNVHRMBAf8EBTADAQH_MA4GA1UdDwEB_wQEAwIBhjALBgkqhkiG9w0BAQsDggEBAFK6TaAORcwSnlG8az-bsC1oaLSEgrPTByJnsDB00kb0-8Qgj8mmddtxeRBCMXxPtubIIG39LD3oqdH46yWEMO7yWbiEoTQR4oZIhvn8p0f-DOgoyxJ3S86fD2_N5n-3S-SIa0eXtuc1r1iJxazQwDomlSW3sMTIvuKKugE9x3ytyT-vknAi-rm7m4gpFYDjpzJ34l4A3Fcyy3_kP0n4Aq4mxgyCC-8dVV3g6z5yL_ILwBAp5BfqFSy8xgN0qpE5n3luewDRjHELK_yNg3zOjzikeG9ADR-h9OyynDERb_l7-vc8EGfs4gUn9swx6cIrpeGGjiVZxfG6sMDsabYCziE="
+        sk_lmk = "RDI1MTJTMEVTMDBFMDAwMDYxQjA3RTZBNTQyNzdCOTMyRjU4MDRERTk3NzhBMzRFM0VDQjVGQjQ0OEYzRDI2ODRFMDhBMjYyNjkzMUY4MUFGQ0Q0NjY0NjA1QUJDMUQwRDhGNzI2QjYxOEE4MzhFODA2OUQyNDgyQjRBOTk0QUY1MzZEMzkxQTBEMEY5OUM0ODk3NDI0NUMwNEJCN0MzQ0NBNEE2QTZFMzNBQzM0Mjg0ODlBMEIxRUEyOTE4Q0ZDQzFERDZFQUZEMUZEOEQzMTg3ODEzMjU0OEI4MTdEQTdCQ0JENDMwQzY2NjA5RjgwODYyMEQwMzBDRDVCN0JCM0ZBMDNCMzU0Q0VFQTcwREI1Q0E3NDAzNDI5NzdCOEM0RjhEN0UxQUNCMTFEOTgzNjZCNDg4OTJEQjU5RDc2QTEwOEU1QTdEODUwRTNGNTEzNTNGMzJBRkNFN0JBQTk2NTM2RDU3NzM3Q0I4MTk3RUM4MzFBN0E3QjI0OTk4MUZERkI0NkNCNjk0OUQ3OTFEN0ZBQTQ3QjEzNDA1MkRFRTY4MEU0RjJDNEI2MTA3N0VEMTRDQ0I0NkRFRjhEODhBODVGNjQ2NEVGQTRFMzBCNkJGMkFDNjRBQzk4OTg2MkI4QTQ4MDBERUEwQTJERTQ2QTJBMzg3NzVEMzIxRDU0RjRFNzQ3MUY0MkRDMDEzRTRCMTM3ODQxMTJDN0JBNEM2QUMwQTBGMjUwNUQ3QjI5OTdDMUY1MjVGNUM5MjM2MUYyOUU3QURGRTFERjM2NkUyQzZFRUEwRDI1NkI3NDZEMjFENTVGMTYxNzAzQjI0RjRBNjQ2NkYwQzRBNjI5MzlEN0UxRDU1QTRFQ0E0NjUyRkQ2MzhFREE0MjM3MDQ4QkQyQ0ZFMzQwREYzQkREQkY3NjE3OTUzRTFDRjhENzEwODQ0QTMxNTI0MkMzM0E2OUFGRUQyRTg5MTQyRDE4MTU5QzM3RkI2RDdGNDREMTA0NDBEMEZGQTg4MTI1MjUxMDZGQUE0Q0U3NEUzODBDMjY1RDI2RTYzNkMxQzA4QUY3RTNERTNDMjNEQUY2NDdDMTRBNkM0RjFERjU5NDUwRTA1QjgwMDgzQjUzMDVFRkUwNTI3MDNGNjFGM0FBODNCRDUwQ0IwMjA1NjQxQzdDMUM3MjA5NzQzN0JEMzJEMjYwM0UzMTQ0NjNEQzUwMDY5OTkyNUFBNDI0NUZCNkRENTVFRTY4QTlFODVBRTRCRDM3Q0U0OTJGNDkzOTA1RTJDMDMzMTExQTE2MDUwM0NEMUY2QjE2ODAyQ0MwOTEzMjAwOTIyQ0JDOTVGMkYyRDg1RTdGRjBENkZGMEJDNzg5RUIyMzFFM0RCRDVGMjFGRTg2Q0NBQzIxQTY2ODEwNTQ5QzE5QkYxMjQwNEFEMTUyRTMyM0U2NDJCQkU0NEUxNTY1RDBCMURFRTlFNjlBMzIxQjcxNDkzNzNCRjIyMUQ0MzRBNEYyMDQ3MUJBMzMyNDRFQkRFRTMyMjgyOEVDODM5OUNFM0QzMURENzQwQzk5MTJEN0YwNEY0RTcxN0EwNjc2RkQwQUQ4QUI5QjhDM0U5Q0RGRTFDRjk2NTk5M0QzN0FEQzRDMDMyMkZCNzNENTg5RkFFQzJDQjIwOTJEREU3OUM4MDEwQ0Y0RUNFMDMwRDhEMDk1RjI5QTg1QkY2MEFFODQ2RDUyOTY3RUJDQjE2QjE5ODZDM0FBNkQ2OUYyMjE2MUQ5Q0JGRUE2RDg4RTgzQUZCRjg3Njg4OTkyRTU4RkEwQUExNzQwOEU0QTc1MTg4RUFBODhDODVDODcyNDYwNDI4RkVGNDBFNzJCODcxNTgzRkYzOUNENzY3NjcyQjE4QTY4ODJDMThCMERGNTJGRTIyQjRGNEZGRjZFQzk2QzEyQjVCQjA0MjY3MjJDNjcyMzA0ODY5MTg4OTU2NTgxQjc2RTZFQkY1NUFCQzgyOEU2NTdGRUNGRkUzREU2RjgzMTQ2QzdCODgxMUJBNkJFRTgzMTIwRjdFQTMyRkFGNkQ0QTkyM0E1NzdCMzQ2M0U0Q0MxMEVBOTk2QkVGODM3NDVGQjgzN0ZGQ0YzNDY4REQzOENGOTdENENBRjAyOTZCRUNBMTAyM0Y4NjYxMUMzRDFBRjhCOUM4RjI0NjVDMUI0NzBGOUYyN0U3MTBDMzlCNTMzNjZBODM1QkEyMEFDNkVFMDY3OTI0NkM3REY1OEU1OURBNkEzODdBQzUzOTE4Mjg1Mjc1QjQxQUM4OTc3MDZDMzk4RDNERTYxOUM4MkUyNEFDOTIxQjQ3MjNGRDdDRTQyMjA4OTEzRDMxQjY5NzAzQzYwODhEMTgxMzhERTk1MTNEMEZEQjcyMUE2M0VFRTk1RDRBRkZBRTIxMjJFRDBDRDRBRDk2MzQzOUFFODUyQjJBOTMzMTgxQTk3NTlBQUI2NTI0MzU2ODYwNTRCREMwMDkwNEI0QUNGQTZCMzdDNTU4ODhCRDhDMkFCQjc0MjQ2NTQ1RTE4NzlFRDUzNDhEQkREOTdEMzg3OUI1NjJDMjQ0RTQzMkU2M0NBMEU3NDgxMDhCRUU4Q0Q3NTUyQ0Q2Mjc5NTQxRkNFMTFCOTdCNUFGMzcyRjRBNkEyODcwQ0JBNjcyMUMzNERFRDJEMkRBQTUwQ0QyNzRBODVCNDNGQkNDMTNCNDdBQTI1MzhFRUVFRkU4MzMyMjA4NkRBN0Q2MjMzQ0RGNUY3QkQ2QkU5NEU2RjFBODExOTkxNzJGQjA0ODY4RDU0RDZCRkVEQjhCN0YzM0JBQkY5Q0I3RkE2REJCMDA4NDMwMDUwQTVCQjFCREM3OTJEOTZCQjA5QjQwNDgzM0E4MUM3OEQ5MTlCRDE5NkI4RjFBMURGQUMxMTMwMzY2Qjk0RjkzNjE3QTQ1NkQ0ODA5RkM3NjE4QzRCOTkzOURBMkFENDUwNzE3MDhGODNGODhDRTg4NEVDNUI1M0VDQUVDMEJFQTU0NzRGQTA5OURDNjg3MTAzRkE4NzUxMjhGNzFBMDVBREZFNkI5NTdDMEJGRUVGNTdDQjQ2OUUyQkVGNDE2NzYyN0Y4NTAwRDVEQUQ4RDAyMENCRTZCMDVGQkRBNTIwRTc0OUFERDEwM0NCNjM2MUI3RTBGQ0ZDQzQxRDI3OUUyMjk1MEM0Q0UzQkY4QzAwRTlERTYzNzA2RUJBRDIyRkFGQjU3QUQ0QTM2MjJFRTY3RDQ1NjBCNzE2NjY5Q0Y4RTNGODJBNjIxQjU0NTZGRDk1MjU2QTZBMjM4QUUyQkFEN0I4NjlBNzYzMTU3NzQwOTEwNTFGQjQ2MTNERDIxQjNBNTVCMw=="
+        crl = await self._crl("R2K", cert, sk_lmk)
+        assert len(crl) > 0
+        assert isinstance(crl, str)
+
+    @pytest.mark.asyncio
+    async def test_crl_ecp256(self):
+        cert = "MIIB5DCCAYqgAwIBAgIIGGYCNn1JNogwCgYIKoZIzj0EAwIwUDELMAkGA1UEBhMCRUcxDjAMBgNVBAgMBUNhaXJvMQ4wDAYDVQQHDAVDYWlybzEPMA0GA1UECgwGUGF5bW9iMRAwDgYDVQQDDAdSb290LUNBMB4XDTI1MDkxNzA3NDUzN1oXDTI2MDkxNzA3NDUzN1owUDELMAkGA1UEBhMCRUcxDjAMBgNVBAgMBUNhaXJvMQ4wDAYDVQQHDAVDYWlybzEPMA0GA1UECgwGUGF5bW9iMRAwDgYDVQQDDAdSb290LUNBMFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAE-yNjW1SqnHsicAqruzVip9xkv--ZYDoTzK5or-rPTAEoGamiq7BqJNBqCpgL8oFzNyFlq_xxYS5cb15pFqxp96NOMEwwKQYDVR0OBCIEIJlosxhE-WkP6LperxAiu9zbPfSJgsXHlPRalfClsZdLMA8GA1UdEwEB_wQFMAMBAf8wDgYDVR0PAQH_BAQDAgGGMAoGCCqGSM49BAMCA0gAMEUCIQDsTLUn9P5MMZUSGrAR57Np4IKU4AGf-ig04IddVpXrugIgG_kdu2Haz_HJJuu1z-DrBkrdAAl8q9Zr2n09431jP3M="
+        sk_lmk = "RDAzMzZTMEVTMDBFMDAwMDAyODkwQjAxMzM5MzRGOUZBQjVDNjg0ODhCQjVBMzI3N0I0OUM3RTlGOTk1MDhEOUYyMzg3OTNFREJDQjlBNDlDN0E2NUE2OTQzM0QwMEJDMTVFRDcwNzMzRTI1OUNGRTBGNkMwNDgyMzhBMTVBOEUwODg0NDFDMTg3NzVDNDc5OEFBQjA2RUZDOEI2ODg3MEVGRkU1MjEyQTEzQzc1QkY5RUQ5NkExOEZENjMwM0I1NUIwNTA3Qjg5OEE3NzAzMEZBOTU2MUY4REExQTExRjEwQ0JGMDU2OEVEQUIwRTcwQjk3MUIyRDYyNjdBRUEwNkMzOUM3MzREQkFENDA1QkY2OENCMEUzMDc0MzAxMkRFNTA4NDQ4MTEzNEIzQkUzRDI5OTkwMTE1Q0QwMEZGNjE2RjE4OTlEMzQyOTBDNzVC"
+        crl = await self._crl("ECP256", cert, sk_lmk)
+        assert len(crl) > 0
+        assert isinstance(crl, str)
+
+if __name__ == "__main__":
+    test = TestEps()
+    asyncio.run(test.test_exp_tr34())

@@ -1,0 +1,40 @@
+# Test artifacts and temporary files
+.coverage
+coverage.xml
+htmlcov/
+.pytest_cache/
+test-results.xml
+TEST-*.xml
+*.coverage
+
+# Python cache files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Virtual environment
+.venv/
+venv/
+
+# SonarQube artifacts
+.scannerwork/
+
+# Additional test artifacts
+.tox/
+.nox/
+.coverage.*
+coverage.*
+*.cover
+.hypothesis/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# mypy
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# Pyre type checker
+.pyre/

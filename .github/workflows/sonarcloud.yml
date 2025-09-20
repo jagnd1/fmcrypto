@@ -1,0 +1,117 @@
+name: sonarcloud analysis
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+jobs:
+  sonarcloud:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # shallow clones should be disabled for better analysis
+          
+      - name: set up python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.13'
+          
+      - name: cache pip dependencies
+        uses: actions/cache@v3
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+            
+      - name: install dependencies
+        run: |
+          cd testing
+          python -m venv .venv
+          source .venv/bin/activate
+          python -m pip install --upgrade pip
+          pip install pytest pytest-cov pytest-asyncio httpx
+          pip install -r ../crypto_service/requirements.txt
+          pip install -r ../pki_service/requirements.txt
+          
+      - name: start crypto service
+        run: |
+          cd crypto_service
+          python -m pip install -r requirements.txt
+          nohup uvicorn app.main:app --host 0.0.0.0 --port 8001 > crypto.log 2>&1 &
+          echo $! > crypto.pid
+        
+      - name: start pki service  
+        run: |
+          cd pki_service
+          python -m pip install -r requirements.txt
+          nohup uvicorn app.main:app --host 0.0.0.0 --port 8000 > pki.log 2>&1 &
+          echo $! > pki.pid
+          
+      - name: wait for services to start
+        run: |
+          # wait for crypto service
+          timeout 30s bash -c 'until curl -f http://localhost:8001/health > /dev/null 2>&1; do sleep 2; done'
+          echo "crypto service is ready"
+          
+          # wait for pki service
+          timeout 30s bash -c 'until curl -f http://localhost:8000/health > /dev/null 2>&1; do sleep 2; done'
+          echo "pki service is ready"
+          
+      - name: run tests with coverage
+        run: |
+          cd testing
+          source .venv/bin/activate
+          export HSM_IP="localhost"
+          export HSM_PORT="1234"
+          export CRYPTO_HSM="GP"
+          export CRYPTO_HOST="localhost"
+          export CRYPTO_PORT="8001"
+          export ENVIRONMENT="test"
+          export PKI_HOST="localhost"
+          export PKI_PORT="8000"
+          export PROTOCOL="http"
+          export PYTHONPATH="../:$PYTHONPATH"
+          
+          pytest unit_tests/ integration_tests/ e2e_tests/ \
+            --cov=../crypto_service \
+            --cov=../pki_service \
+            --cov=../common \
+            --cov-report=xml:coverage.xml \
+            --cov-report=html:htmlcov \
+            --junitxml=test-results.xml \
+            -v
+            
+      - name: stop services
+        if: always()
+        run: |
+          # stop crypto service if running
+          if [ -f crypto_service/crypto.pid ]; then
+            kill $(cat crypto_service/crypto.pid) || true
+            rm crypto_service/crypto.pid
+          fi
+          
+          # stop pki service if running  
+          if [ -f pki_service/pki.pid ]; then
+            kill $(cat pki_service/pki.pid) || true
+            rm pki_service/pki.pid
+          fi
+            
+      - name: sonarcloud scan
+        uses: SonarSource/sonarcloud-github-action@master
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        with:
+          projectBaseDir: .
+          # use the sonar-project.properties file from testing directory
+          # override key settings for sonarcloud
+          args: >
+            -Dsonar.projectKey=fmcrypto
+            -Dsonar.organization=fm
+            -Dsonar.host.url=https://sonarcloud.io
