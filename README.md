@@ -1,8 +1,8 @@
 # fmcrypto service
 
-[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=fmcrypto&metric=alert_status)](https://sonarcloud.io/dashboard?id=fmcrypto)
-[![Coverage](https://sonarcloud.io/api/project_badges/measure?project=fmcrypto&metric=coverage)](https://sonarcloud.io/dashboard?id=fmcrypto)
-[![Maintainability Rating](https://sonarcloud.io/api/project_badges/measure?project=fmcrypto&metric=sqale_rating)](https://sonarcloud.io/dashboard?id=fmcrypto)
+[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=jagnd1_fmcrypto&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=jagnd1_fmcrypto)
+[![Coverage](https://sonarcloud.io/api/project_badges/measure?project=jagnd1_fmcrypto&metric=coverage)](https://sonarcloud.io/summary/new_code?id=jagnd1_fmcrypto)
+[![Maintainability Rating](https://sonarcloud.io/api/project_badges/measure?project=jagnd1_fmcrypto&metric=sqale_rating)](https://sonarcloud.io/summary/new_code?id=jagnd1_fmcrypto)
 
 a cryptographic and pki service built with FastAPI for secure key management, encryption, and certificate operations.
 
