@@ -124,14 +124,17 @@ jobs:
           sed -i 's|<source>../crypto_service</source>|<source>crypto_service</source>|g' coverage.xml
           sed -i 's|<source>../pki_service</source>|<source>pki_service</source>|g' coverage.xml
           
-          # DIAGNOSTIC: Regenerate coverage with relative paths as recommended
-          coverage xml -i --rcfile=.coveragerc
-          
-          # Verify the fix worked
+          # Verify ALL fixes worked (paths AND sources)
           echo "=== Verifying path fix ==="
           grep 'filename=' coverage.xml | head -3
           echo "=== Verifying sources section ==="
           grep '<source>' coverage.xml
+          
+          # DIAGNOSTIC: Show coverage file stats for SonarCloud
+          echo "=== Coverage file diagnostic ==="
+          echo "File size: $(ls -lh coverage.xml | awk '{print $5}')"
+          echo "Line count: $(wc -l < coverage.xml)"
+          echo "Coverage rate: $(grep 'line-rate=' coverage.xml | head -1)"
             
       - name: stop services
         if: always()
