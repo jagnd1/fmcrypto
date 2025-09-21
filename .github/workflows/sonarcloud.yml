@@ -106,7 +106,7 @@ jobs:
           export PROTOCOL="http"
           export PYTHONPATH="../:$PYTHONPATH"
           
-          # Official SonarCloud recommended command structure
+          # Generate coverage with proper relative paths for SonarCloud
           pytest unit_tests/ integration_tests/ e2e_tests/ \
             --cov=../crypto_service \
             --cov=../pki_service \
@@ -114,6 +114,14 @@ jobs:
             --cov-report=xml:coverage.xml \
             --junitxml=test-results.xml \
             -v
+          
+          # CRITICAL: Fix absolute paths to relative paths for SonarCloud
+          sed -i 's|filename="/home/runner/work/fmcrypto/fmcrypto/|filename="|g' coverage.xml
+          sed -i 's|filename="home/runner/work/fmcrypto/fmcrypto/|filename="|g' coverage.xml
+          
+          # Verify the fix worked
+          echo "=== Verifying path fix ==="
+          grep 'filename=' coverage.xml | head -3
             
       - name: stop services
         if: always()
