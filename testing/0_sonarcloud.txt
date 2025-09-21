@@ -1,0 +1,510 @@
+﻿2025-09-20T09:07:17.0672696Z Current runner version: '2.328.0'
+2025-09-20T09:07:17.0696088Z ##[group]Runner Image Provisioner
+2025-09-20T09:07:17.0696907Z Hosted Compute Agent
+2025-09-20T09:07:17.0697509Z Version: 20250829.383
+2025-09-20T09:07:17.0698074Z Commit: 27cb235aab5b0e52e153a26cd86b4742e89dac5d
+2025-09-20T09:07:17.0698761Z Build Date: 2025-08-29T13:48:48Z
+2025-09-20T09:07:17.0699422Z ##[endgroup]
+2025-09-20T09:07:17.0700139Z ##[group]Operating System
+2025-09-20T09:07:17.0700699Z Ubuntu
+2025-09-20T09:07:17.0701113Z 24.04.3
+2025-09-20T09:07:17.0701645Z LTS
+2025-09-20T09:07:17.0702052Z ##[endgroup]
+2025-09-20T09:07:17.0702516Z ##[group]Runner Image
+2025-09-20T09:07:17.0703120Z Image: ubuntu-24.04
+2025-09-20T09:07:17.0703614Z Version: 20250907.24.1
+2025-09-20T09:07:17.0704588Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20250907.24/images/ubuntu/Ubuntu2404-Readme.md
+2025-09-20T09:07:17.0706135Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20250907.24
+2025-09-20T09:07:17.0707049Z ##[endgroup]
+2025-09-20T09:07:17.0708161Z ##[group]GITHUB_TOKEN Permissions
+2025-09-20T09:07:17.0710136Z Contents: read
+2025-09-20T09:07:17.0710771Z Metadata: read
+2025-09-20T09:07:17.0711234Z Packages: read
+2025-09-20T09:07:17.0711718Z ##[endgroup]
+2025-09-20T09:07:17.0713749Z Secret source: Actions
+2025-09-20T09:07:17.0714446Z Prepare workflow directory
+2025-09-20T09:07:17.1027077Z Prepare all required actions
+2025-09-20T09:07:17.1067042Z Getting action download info
+2025-09-20T09:07:17.5678975Z Download action repository 'actions/checkout@v4' (SHA:08eba0b27e820071cde6df949e0beb9ba4906955)
+2025-09-20T09:07:17.7380720Z Download action repository 'actions/setup-python@v4' (SHA:7f4fc3e22c37d6ff65e88745f38bd3157c663f7c)
+2025-09-20T09:07:17.8777740Z Download action repository 'actions/cache@v3' (SHA:2f8e54208210a422b2efd51efaa6bd6d7ca8920f)
+2025-09-20T09:07:18.0341875Z Download action repository 'SonarSource/sonarcloud-github-action@master' (SHA:ba3875ecf642b2129de2b589510c81a8b53dbf4e)
+2025-09-20T09:07:18.5878282Z Getting action download info
+2025-09-20T09:07:18.7863439Z Download action repository 'SonarSource/sonarqube-scan-action@v5.0.0' (SHA:0303d6b62e310685c0e34d0b9cde218036885c4d)
+2025-09-20T09:07:19.2252499Z Getting action download info
+2025-09-20T09:07:19.3882758Z Download action repository 'actions/cache@v4' (SHA:0400d5f644dc74513175e3cd8d07132dd4860809)
+2025-09-20T09:07:19.5044096Z Complete job name: sonarcloud
+2025-09-20T09:07:19.5712173Z ##[group]Run actions/checkout@v4
+2025-09-20T09:07:19.5713076Z with:
+2025-09-20T09:07:19.5713494Z   fetch-depth: 0
+2025-09-20T09:07:19.5713960Z   repository: jagnd1/fmcrypto
+2025-09-20T09:07:19.5714551Z   token: ***
+2025-09-20T09:07:19.5714858Z   ssh-strict: true
+2025-09-20T09:07:19.5715147Z   ssh-user: git
+2025-09-20T09:07:19.5715472Z   persist-credentials: true
+2025-09-20T09:07:19.5715800Z   clean: true
+2025-09-20T09:07:19.5716132Z   sparse-checkout-cone-mode: true
+2025-09-20T09:07:19.5716484Z   fetch-tags: false
+2025-09-20T09:07:19.5716777Z   show-progress: true
+2025-09-20T09:07:19.5717090Z   lfs: false
+2025-09-20T09:07:19.5717359Z   submodules: false
+2025-09-20T09:07:19.5717662Z   set-safe-directory: true
+2025-09-20T09:07:19.5718220Z ##[endgroup]
+2025-09-20T09:07:19.6752808Z Syncing repository: jagnd1/fmcrypto
+2025-09-20T09:07:19.6754464Z ##[group]Getting Git version info
+2025-09-20T09:07:19.6754981Z Working directory is '/home/runner/work/fmcrypto/fmcrypto'
+2025-09-20T09:07:19.6755808Z [command]/usr/bin/git version
+2025-09-20T09:07:19.6825819Z git version 2.51.0
+2025-09-20T09:07:19.6850962Z ##[endgroup]
+2025-09-20T09:07:19.6864418Z Temporarily overriding HOME='/home/runner/work/_temp/e4becddb-ccad-446e-baa5-13706e08341d' before making global git config changes
+2025-09-20T09:07:19.6865347Z Adding repository directory to the temporary git global config as a safe directory
+2025-09-20T09:07:19.6876301Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/fmcrypto/fmcrypto
+2025-09-20T09:07:19.6909249Z Deleting the contents of '/home/runner/work/fmcrypto/fmcrypto'
+2025-09-20T09:07:19.6912891Z ##[group]Initializing the repository
+2025-09-20T09:07:19.6916767Z [command]/usr/bin/git init /home/runner/work/fmcrypto/fmcrypto
+2025-09-20T09:07:19.7010849Z hint: Using 'master' as the name for the initial branch. This default branch name
+2025-09-20T09:07:19.7011742Z hint: is subject to change. To configure the initial branch name to use in all
+2025-09-20T09:07:19.7012588Z hint: of your new repositories, which will suppress this warning, call:
+2025-09-20T09:07:19.7013140Z hint:
+2025-09-20T09:07:19.7013586Z hint: 	git config --global init.defaultBranch <name>
+2025-09-20T09:07:19.7014077Z hint:
+2025-09-20T09:07:19.7014567Z hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+2025-09-20T09:07:19.7015448Z hint: 'development'. The just-created branch can be renamed via this command:
+2025-09-20T09:07:19.7016387Z hint:
+2025-09-20T09:07:19.7016774Z hint: 	git branch -m <name>
+2025-09-20T09:07:19.7017158Z hint:
+2025-09-20T09:07:19.7017670Z hint: Disable this message with "git config set advice.defaultBranchName false"
+2025-09-20T09:07:19.7018482Z Initialized empty Git repository in /home/runner/work/fmcrypto/fmcrypto/.git/
+2025-09-20T09:07:19.7026572Z [command]/usr/bin/git remote add origin https://github.com/jagnd1/fmcrypto
+2025-09-20T09:07:19.7060312Z ##[endgroup]
+2025-09-20T09:07:19.7060881Z ##[group]Disabling automatic garbage collection
+2025-09-20T09:07:19.7064381Z [command]/usr/bin/git config --local gc.auto 0
+2025-09-20T09:07:19.7091600Z ##[endgroup]
+2025-09-20T09:07:19.7092570Z ##[group]Setting up auth
+2025-09-20T09:07:19.7098696Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2025-09-20T09:07:19.7128371Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2025-09-20T09:07:19.7426157Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2025-09-20T09:07:19.7454664Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2025-09-20T09:07:19.7670241Z [command]/usr/bin/git config --local http.https://github.com/.extraheader AUTHORIZATION: basic ***
+2025-09-20T09:07:19.7703460Z ##[endgroup]
+2025-09-20T09:07:19.7704534Z ##[group]Fetching the repository
+2025-09-20T09:07:19.7720576Z [command]/usr/bin/git -c protocol.version=2 fetch --prune --no-recurse-submodules origin +refs/heads/*:refs/remotes/origin/* +refs/tags/*:refs/tags/*
+2025-09-20T09:07:20.2810389Z From https://github.com/jagnd1/fmcrypto
+2025-09-20T09:07:20.2811200Z  * [new branch]      main       -> origin/main
+2025-09-20T09:07:20.2846930Z [command]/usr/bin/git branch --list --remote origin/main
+2025-09-20T09:07:20.2868656Z   origin/main
+2025-09-20T09:07:20.2877975Z [command]/usr/bin/git rev-parse refs/remotes/origin/main
+2025-09-20T09:07:20.2898231Z 208e709e6f6c9f1e1920a2412afcce3f8933e6ab
+2025-09-20T09:07:20.2903881Z ##[endgroup]
+2025-09-20T09:07:20.2904567Z ##[group]Determining the checkout info
+2025-09-20T09:07:20.2905564Z ##[endgroup]
+2025-09-20T09:07:20.2909146Z [command]/usr/bin/git sparse-checkout disable
+2025-09-20T09:07:20.2946078Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
+2025-09-20T09:07:20.2970395Z ##[group]Checking out the ref
+2025-09-20T09:07:20.2973428Z [command]/usr/bin/git checkout --progress --force -B main refs/remotes/origin/main
+2025-09-20T09:07:20.3069752Z Switched to a new branch 'main'
+2025-09-20T09:07:20.3072778Z branch 'main' set up to track 'origin/main'.
+2025-09-20T09:07:20.3079017Z ##[endgroup]
+2025-09-20T09:07:20.3112605Z [command]/usr/bin/git log -1 --format=%H
+2025-09-20T09:07:20.3133944Z 208e709e6f6c9f1e1920a2412afcce3f8933e6ab
+2025-09-20T09:07:20.3406387Z ##[group]Run actions/setup-python@v4
+2025-09-20T09:07:20.3406768Z with:
+2025-09-20T09:07:20.3407217Z   python-version: 3.13
+2025-09-20T09:07:20.3407532Z   check-latest: false
+2025-09-20T09:07:20.3407951Z   token: ***
+2025-09-20T09:07:20.3408235Z   update-environment: true
+2025-09-20T09:07:20.3408569Z   allow-prereleases: false
+2025-09-20T09:07:20.3408878Z ##[endgroup]
+2025-09-20T09:07:20.5143726Z ##[group]Installed versions
+2025-09-20T09:07:20.5236935Z Successfully set up CPython (3.13.7)
+2025-09-20T09:07:20.5238026Z ##[endgroup]
+2025-09-20T09:07:20.6092905Z ##[group]Run actions/cache@v3
+2025-09-20T09:07:20.6093268Z with:
+2025-09-20T09:07:20.6093532Z   path: ~/.cache/pip
+2025-09-20T09:07:20.6094003Z   key: Linux-pip-a09f2a01a686208c7bab8c301f43d24ce4dfc7bf9e17b5117c03b76b207231d9
+2025-09-20T09:07:20.6094526Z   restore-keys: Linux-pip-
+
+2025-09-20T09:07:20.6094873Z   enableCrossOsArchive: false
+2025-09-20T09:07:20.6095202Z   fail-on-cache-miss: false
+2025-09-20T09:07:20.6095517Z   lookup-only: false
+2025-09-20T09:07:20.6095788Z env:
+2025-09-20T09:07:20.6096121Z   pythonLocation: /opt/hostedtoolcache/Python/3.13.7/x64
+2025-09-20T09:07:20.6096646Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.13.7/x64/lib/pkgconfig
+2025-09-20T09:07:20.6097132Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.13.7/x64
+2025-09-20T09:07:20.6097583Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.13.7/x64
+2025-09-20T09:07:20.6098031Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.13.7/x64
+2025-09-20T09:07:20.6098525Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.13.7/x64/lib
+2025-09-20T09:07:20.6098913Z ##[endgroup]
+2025-09-20T09:07:21.0258958Z Cache not found for input keys: Linux-pip-a09f2a01a686208c7bab8c301f43d24ce4dfc7bf9e17b5117c03b76b207231d9, Linux-pip-
+2025-09-20T09:07:21.0344293Z ##[group]Run cd testing
+2025-09-20T09:07:21.0344657Z [36;1mcd testing[0m
+2025-09-20T09:07:21.0344911Z [36;1mpython -m venv .venv[0m
+2025-09-20T09:07:21.0345202Z [36;1msource .venv/bin/activate[0m
+2025-09-20T09:07:21.0345531Z [36;1mpython -m pip install --upgrade pip[0m
+2025-09-20T09:07:21.0345921Z [36;1mpip install pytest pytest-cov pytest-asyncio httpx[0m
+2025-09-20T09:07:21.0346358Z [36;1mpip install -r ../crypto_service/requirements.txt[0m
+2025-09-20T09:07:21.0346743Z [36;1mpip install -r ../pki_service/requirements.txt[0m
+2025-09-20T09:07:21.0474367Z shell: /usr/bin/bash -e {0}
+2025-09-20T09:07:21.0474670Z env:
+2025-09-20T09:07:21.0474968Z   pythonLocation: /opt/hostedtoolcache/Python/3.13.7/x64
+2025-09-20T09:07:21.0475468Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.13.7/x64/lib/pkgconfig
+2025-09-20T09:07:21.0475939Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.13.7/x64
+2025-09-20T09:07:21.0476393Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.13.7/x64
+2025-09-20T09:07:21.0476810Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.13.7/x64
+2025-09-20T09:07:21.0477223Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.13.7/x64/lib
+2025-09-20T09:07:21.0477575Z ##[endgroup]
+2025-09-20T09:07:26.4832372Z Requirement already satisfied: pip in ./.venv/lib/python3.13/site-packages (25.2)
+2025-09-20T09:07:27.1019007Z Collecting pytest
+2025-09-20T09:07:27.1329733Z   Downloading pytest-8.4.2-py3-none-any.whl.metadata (7.7 kB)
+2025-09-20T09:07:27.1515396Z Collecting pytest-cov
+2025-09-20T09:07:27.1540996Z   Downloading pytest_cov-7.0.0-py3-none-any.whl.metadata (31 kB)
+2025-09-20T09:07:27.1826530Z Collecting pytest-asyncio
+2025-09-20T09:07:27.1852189Z   Downloading pytest_asyncio-1.2.0-py3-none-any.whl.metadata (4.1 kB)
+2025-09-20T09:07:27.2054144Z Collecting httpx
+2025-09-20T09:07:27.2080362Z   Downloading httpx-0.28.1-py3-none-any.whl.metadata (7.1 kB)
+2025-09-20T09:07:27.2195770Z Collecting iniconfig>=1 (from pytest)
+2025-09-20T09:07:27.2225993Z   Downloading iniconfig-2.1.0-py3-none-any.whl.metadata (2.7 kB)
+2025-09-20T09:07:27.2388150Z Collecting packaging>=20 (from pytest)
+2025-09-20T09:07:27.2415664Z   Downloading packaging-25.0-py3-none-any.whl.metadata (3.3 kB)
+2025-09-20T09:07:27.2540492Z Collecting pluggy<2,>=1.5 (from pytest)
+2025-09-20T09:07:27.2564970Z   Downloading pluggy-1.6.0-py3-none-any.whl.metadata (4.8 kB)
+2025-09-20T09:07:27.2758245Z Collecting pygments>=2.7.2 (from pytest)
+2025-09-20T09:07:27.2784626Z   Downloading pygments-2.19.2-py3-none-any.whl.metadata (2.5 kB)
+2025-09-20T09:07:27.5851283Z Collecting coverage>=7.10.6 (from coverage[toml]>=7.10.6->pytest-cov)
+2025-09-20T09:07:27.5879583Z   Downloading coverage-7.10.6-cp313-cp313-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl.metadata (8.9 kB)
+2025-09-20T09:07:27.6320690Z Collecting anyio (from httpx)
+2025-09-20T09:07:27.6345053Z   Downloading anyio-4.10.0-py3-none-any.whl.metadata (4.0 kB)
+2025-09-20T09:07:27.6532636Z Collecting certifi (from httpx)
+2025-09-20T09:07:27.6558334Z   Downloading certifi-2025.8.3-py3-none-any.whl.metadata (2.4 kB)
+2025-09-20T09:07:27.6746257Z Collecting httpcore==1.* (from httpx)
+2025-09-20T09:07:27.6773579Z   Downloading httpcore-1.0.9-py3-none-any.whl.metadata (21 kB)
+2025-09-20T09:07:27.6919093Z Collecting idna (from httpx)
+2025-09-20T09:07:27.6943535Z   Downloading idna-3.10-py3-none-any.whl.metadata (10 kB)
+2025-09-20T09:07:27.7074049Z Collecting h11>=0.16 (from httpcore==1.*->httpx)
+2025-09-20T09:07:27.7102223Z   Downloading h11-0.16.0-py3-none-any.whl.metadata (8.3 kB)
+2025-09-20T09:07:27.7272589Z Collecting sniffio>=1.1 (from anyio->httpx)
+2025-09-20T09:07:27.7326942Z   Downloading sniffio-1.3.1-py3-none-any.whl.metadata (3.9 kB)
+2025-09-20T09:07:27.7442521Z Downloading pytest-8.4.2-py3-none-any.whl (365 kB)
+2025-09-20T09:07:27.7522947Z Downloading pluggy-1.6.0-py3-none-any.whl (20 kB)
+2025-09-20T09:07:27.7585383Z Downloading pytest_cov-7.0.0-py3-none-any.whl (22 kB)
+2025-09-20T09:07:27.7693314Z Downloading pytest_asyncio-1.2.0-py3-none-any.whl (15 kB)
+2025-09-20T09:07:27.7739039Z Downloading httpx-0.28.1-py3-none-any.whl (73 kB)
+2025-09-20T09:07:27.7784159Z Downloading httpcore-1.0.9-py3-none-any.whl (78 kB)
+2025-09-20T09:07:27.7834944Z Downloading coverage-7.10.6-cp313-cp313-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl (251 kB)
+2025-09-20T09:07:27.7893079Z Downloading h11-0.16.0-py3-none-any.whl (37 kB)
+2025-09-20T09:07:27.7937927Z Downloading iniconfig-2.1.0-py3-none-any.whl (6.0 kB)
+2025-09-20T09:07:27.7982578Z Downloading packaging-25.0-py3-none-any.whl (66 kB)
+2025-09-20T09:07:27.8028377Z Downloading pygments-2.19.2-py3-none-any.whl (1.2 MB)
+2025-09-20T09:07:27.8123428Z    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1.2/1.2 MB 145.8 MB/s  0:00:00
+2025-09-20T09:07:27.8149090Z Downloading anyio-4.10.0-py3-none-any.whl (107 kB)
+2025-09-20T09:07:27.8197255Z Downloading idna-3.10-py3-none-any.whl (70 kB)
+2025-09-20T09:07:27.8247497Z Downloading sniffio-1.3.1-py3-none-any.whl (10 kB)
+2025-09-20T09:07:27.8291645Z Downloading certifi-2025.8.3-py3-none-any.whl (161 kB)
+2025-09-20T09:07:27.8730255Z Installing collected packages: sniffio, pygments, pluggy, packaging, iniconfig, idna, h11, coverage, certifi, pytest, httpcore, anyio, pytest-cov, pytest-asyncio, httpx
+2025-09-20T09:07:29.3175847Z 
+2025-09-20T09:07:29.3202959Z Successfully installed anyio-4.10.0 certifi-2025.8.3 coverage-7.10.6 h11-0.16.0 httpcore-1.0.9 httpx-0.28.1 idna-3.10 iniconfig-2.1.0 packaging-25.0 pluggy-1.6.0 pygments-2.19.2 pytest-8.4.2 pytest-asyncio-1.2.0 pytest-cov-7.0.0 sniffio-1.3.1
+2025-09-20T09:07:29.8122895Z Collecting annotated-types==0.7.0 (from -r ../crypto_service/requirements.txt (line 1))
+2025-09-20T09:07:29.8417989Z   Downloading annotated_types-0.7.0-py3-none-any.whl.metadata (15 kB)
+2025-09-20T09:07:29.8467569Z Requirement already satisfied: anyio==4.10.0 in ./.venv/lib/python3.13/site-packages (from -r ../crypto_service/requirements.txt (line 2)) (4.10.0)
+2025-09-20T09:07:29.8573159Z Collecting asn1crypto==1.5.1 (from -r ../crypto_service/requirements.txt (line 3))
+2025-09-20T09:07:29.8598658Z   Downloading asn1crypto-1.5.1-py2.py3-none-any.whl.metadata (13 kB)
+2025-09-20T09:07:29.8639089Z Requirement already satisfied: certifi==2025.8.3 in ./.venv/lib/python3.13/site-packages (from -r ../crypto_service/requirements.txt (line 4)) (2025.8.3)
+2025-09-20T09:07:29.9740978Z Collecting cffi==2.0.0 (from -r ../crypto_service/requirements.txt (line 5))
+2025-09-20T09:07:29.9768577Z   Downloading cffi-2.0.0-cp313-cp313-manylinux2014_x86_64.manylinux_2_17_x86_64.whl.metadata (2.6 kB)
+2025-09-20T09:07:29.9950035Z Collecting click==8.2.1 (from -r ../crypto_service/requirements.txt (line 6))
+2025-09-20T09:07:29.9975202Z   Downloading click-8.2.1-py3-none-any.whl.metadata (2.5 kB)
+2025-09-20T09:07:30.1679124Z Collecting cryptography==45.0.7 (from -r ../crypto_service/requirements.txt (line 7))
+2025-09-20T09:07:30.1714666Z   Downloading cryptography-45.0.7-cp311-abi3-manylinux_2_34_x86_64.whl.metadata (5.7 kB)
+2025-09-20T09:07:30.2595176Z Collecting fastapi-slim==0.116.1 (from -r ../crypto_service/requirements.txt (line 8))
+2025-09-20T09:07:30.2634327Z   Downloading fastapi_slim-0.116.1-py3-none-any.whl.metadata (28 kB)
+2025-09-20T09:07:30.3926085Z Collecting greenlet==3.2.4 (from -r ../crypto_service/requirements.txt (line 9))
+2025-09-20T09:07:30.3953724Z   Downloading greenlet-3.2.4-cp313-cp313-manylinux_2_24_x86_64.manylinux_2_28_x86_64.whl.metadata (4.1 kB)
+2025-09-20T09:07:30.3996748Z Requirement already satisfied: h11==0.16.0 in ./.venv/lib/python3.13/site-packages (from -r ../crypto_service/requirements.txt (line 10)) (0.16.0)
+2025-09-20T09:07:30.4001110Z Requirement already satisfied: httpcore==1.0.9 in ./.venv/lib/python3.13/site-packages (from -r ../crypto_service/requirements.txt (line 11)) (1.0.9)
+2025-09-20T09:07:30.4005144Z Requirement already satisfied: httpx==0.28.1 in ./.venv/lib/python3.13/site-packages (from -r ../crypto_service/requirements.txt (line 12)) (0.28.1)
+2025-09-20T09:07:30.4009266Z Requirement already satisfied: idna==3.10 in ./.venv/lib/python3.13/site-packages (from -r ../crypto_service/requirements.txt (line 13)) (3.10)
+2025-09-20T09:07:30.4729586Z Collecting psec==1.3.0 (from -r ../crypto_service/requirements.txt (line 14))
+2025-09-20T09:07:30.4758608Z   Downloading psec-1.3.0-py3-none-any.whl.metadata (2.4 kB)
+2025-09-20T09:07:30.4961750Z Collecting pyasn1==0.6.1 (from -r ../crypto_service/requirements.txt (line 15))
+2025-09-20T09:07:30.4987133Z   Downloading pyasn1-0.6.1-py3-none-any.whl.metadata (8.4 kB)
+2025-09-20T09:07:30.5098416Z Collecting pycparser==2.23 (from -r ../crypto_service/requirements.txt (line 16))
+2025-09-20T09:07:30.5122823Z   Downloading pycparser-2.23-py3-none-any.whl.metadata (993 bytes)
+2025-09-20T09:07:30.5919096Z Collecting pycryptodome==3.23.0 (from -r ../crypto_service/requirements.txt (line 17))
+2025-09-20T09:07:30.5948910Z   Downloading pycryptodome-3.23.0-cp37-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (3.4 kB)
+2025-09-20T09:07:30.6987502Z Collecting pydantic==2.11.9 (from -r ../crypto_service/requirements.txt (line 18))
+2025-09-20T09:07:30.7015338Z   Downloading pydantic-2.11.9-py3-none-any.whl.metadata (68 kB)
+2025-09-20T09:07:31.3042779Z Collecting pydantic_core==2.33.2 (from -r ../crypto_service/requirements.txt (line 19))
+2025-09-20T09:07:31.3072849Z   Downloading pydantic_core-2.33.2-cp313-cp313-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (6.8 kB)
+2025-09-20T09:07:31.3241942Z Collecting PyJWT==2.10.1 (from -r ../crypto_service/requirements.txt (line 20))
+2025-09-20T09:07:31.3269642Z   Downloading PyJWT-2.10.1-py3-none-any.whl.metadata (4.0 kB)
+2025-09-20T09:07:31.3418436Z Collecting python-json-logger==3.3.0 (from -r ../crypto_service/requirements.txt (line 21))
+2025-09-20T09:07:31.3447362Z   Downloading python_json_logger-3.3.0-py3-none-any.whl.metadata (4.0 kB)
+2025-09-20T09:07:31.3499038Z Requirement already satisfied: sniffio==1.3.1 in ./.venv/lib/python3.13/site-packages (from -r ../crypto_service/requirements.txt (line 22)) (1.3.1)
+2025-09-20T09:07:31.3730044Z Collecting starlette==0.47.3 (from -r ../crypto_service/requirements.txt (line 23))
+2025-09-20T09:07:31.3764028Z   Downloading starlette-0.47.3-py3-none-any.whl.metadata (6.2 kB)
+2025-09-20T09:07:31.3872435Z Collecting typing-inspection==0.4.1 (from -r ../crypto_service/requirements.txt (line 24))
+2025-09-20T09:07:31.3942818Z   Downloading typing_inspection-0.4.1-py3-none-any.whl.metadata (2.6 kB)
+2025-09-20T09:07:31.4103105Z Collecting typing_extensions==4.15.0 (from -r ../crypto_service/requirements.txt (line 25))
+2025-09-20T09:07:31.4127906Z   Downloading typing_extensions-4.15.0-py3-none-any.whl.metadata (3.3 kB)
+2025-09-20T09:07:31.4430649Z Collecting uvicorn==0.35.0 (from -r ../crypto_service/requirements.txt (line 26))
+2025-09-20T09:07:31.4457210Z   Downloading uvicorn-0.35.0-py3-none-any.whl.metadata (6.5 kB)
+2025-09-20T09:07:31.5588906Z Downloading annotated_types-0.7.0-py3-none-any.whl (13 kB)
+2025-09-20T09:07:31.5634812Z Downloading asn1crypto-1.5.1-py2.py3-none-any.whl (105 kB)
+2025-09-20T09:07:31.5707817Z Downloading cffi-2.0.0-cp313-cp313-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (219 kB)
+2025-09-20T09:07:31.5793817Z Downloading click-8.2.1-py3-none-any.whl (102 kB)
+2025-09-20T09:07:31.5848434Z Downloading cryptography-45.0.7-cp311-abi3-manylinux_2_34_x86_64.whl (4.5 MB)
+2025-09-20T09:07:31.6280680Z    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 4.5/4.5 MB 112.1 MB/s  0:00:00
+2025-09-20T09:07:31.6317073Z Downloading fastapi_slim-0.116.1-py3-none-any.whl (95 kB)
+2025-09-20T09:07:31.6369226Z Downloading pydantic-2.11.9-py3-none-any.whl (444 kB)
+2025-09-20T09:07:31.6436250Z Downloading starlette-0.47.3-py3-none-any.whl (72 kB)
+2025-09-20T09:07:31.6485507Z Downloading greenlet-3.2.4-cp313-cp313-manylinux_2_24_x86_64.manylinux_2_28_x86_64.whl (610 kB)
+2025-09-20T09:07:31.6607085Z    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 610.5/610.5 kB 45.2 MB/s  0:00:00
+2025-09-20T09:07:31.7348910Z Downloading psec-1.3.0-py3-none-any.whl (27 kB)
+2025-09-20T09:07:31.7397953Z Downloading pyasn1-0.6.1-py3-none-any.whl (83 kB)
+2025-09-20T09:07:31.7446127Z Downloading pycparser-2.23-py3-none-any.whl (118 kB)
+2025-09-20T09:07:31.7496678Z Downloading pycryptodome-3.23.0-cp37-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (2.3 MB)
+2025-09-20T09:07:31.7670483Z    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 2.3/2.3 MB 136.7 MB/s  0:00:00
+2025-09-20T09:07:31.7697412Z Downloading pydantic_core-2.33.2-cp313-cp313-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (2.0 MB)
+2025-09-20T09:07:31.7866443Z    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 2.0/2.0 MB 156.3 MB/s  0:00:00
+2025-09-20T09:07:31.7890646Z Downloading PyJWT-2.10.1-py3-none-any.whl (22 kB)
+2025-09-20T09:07:31.8004883Z Downloading python_json_logger-3.3.0-py3-none-any.whl (15 kB)
+2025-09-20T09:07:31.8060683Z Downloading typing_inspection-0.4.1-py3-none-any.whl (14 kB)
+2025-09-20T09:07:31.8105463Z Downloading typing_extensions-4.15.0-py3-none-any.whl (44 kB)
+2025-09-20T09:07:31.8148955Z Downloading uvicorn-0.35.0-py3-none-any.whl (66 kB)
+2025-09-20T09:07:31.8850780Z Installing collected packages: asn1crypto, typing_extensions, python-json-logger, PyJWT, pycryptodome, pycparser, pyasn1, greenlet, click, annotated-types, uvicorn, typing-inspection, starlette, pydantic_core, cffi, pydantic, cryptography, psec, fastapi-slim
+2025-09-20T09:07:33.5638256Z 
+2025-09-20T09:07:33.5680965Z Successfully installed PyJWT-2.10.1 annotated-types-0.7.0 asn1crypto-1.5.1 cffi-2.0.0 click-8.2.1 cryptography-45.0.7 fastapi-slim-0.116.1 greenlet-3.2.4 psec-1.3.0 pyasn1-0.6.1 pycparser-2.23 pycryptodome-3.23.0 pydantic-2.11.9 pydantic_core-2.33.2 python-json-logger-3.3.0 starlette-0.47.3 typing-inspection-0.4.1 typing_extensions-4.15.0 uvicorn-0.35.0
+2025-09-20T09:07:34.1139222Z Requirement already satisfied: annotated-types==0.7.0 in ./.venv/lib/python3.13/site-packages (from -r ../pki_service/requirements.txt (line 1)) (0.7.0)
+2025-09-20T09:07:34.1144310Z Requirement already satisfied: anyio==4.10.0 in ./.venv/lib/python3.13/site-packages (from -r ../pki_service/requirements.txt (line 2)) (4.10.0)
+2025-09-20T09:07:34.1149045Z Requirement already satisfied: asn1crypto==1.5.1 in ./.venv/lib/python3.13/site-packages (from -r ../pki_service/requirements.txt (line 3)) (1.5.1)
+2025-09-20T09:07:34.1153803Z Requirement already satisfied: certifi==2025.8.3 in ./.venv/lib/python3.13/site-packages (from -r ../pki_service/requirements.txt (line 4)) (2025.8.3)
+2025-09-20T09:07:34.1158444Z Requirement already satisfied: cffi==2.0.0 in ./.venv/lib/python3.13/site-packages (from -r ../pki_service/requirements.txt (line 5)) (2.0.0)
+2025-09-20T09:07:34.1163258Z Requirement already satisfied: click==8.2.1 in ./.venv/lib/python3.13/site-packages (from -r ../pki_service/requirements.txt (line 6)) (8.2.1)
+2025-09-20T09:07:34.1167700Z Requirement already satisfied: cryptography==45.0.7 in ./.venv/lib/python3.13/site-packages (from -r ../pki_service/requirements.txt (line 7)) (45.0.7)
+2025-09-20T09:07:34.1172438Z Requirement already satisfied: fastapi-slim==0.116.1 in ./.venv/lib/python3.13/site-packages (from -r ../pki_service/requirements.txt (line 8)) (0.116.1)
+2025-09-20T09:07:34.1176821Z Requirement already satisfied: greenlet==3.2.4 in ./.venv/lib/python3.13/site-packages (from -r ../pki_service/requirements.txt (line 9)) (3.2.4)
+2025-09-20T09:07:34.1181099Z Requirement already satisfied: h11==0.16.0 in ./.venv/lib/python3.13/site-packages (from -r ../pki_service/requirements.txt (line 10)) (0.16.0)
+2025-09-20T09:07:34.1185705Z Requirement already satisfied: httpcore==1.0.9 in ./.venv/lib/python3.13/site-packages (from -r ../pki_service/requirements.txt (line 11)) (1.0.9)
+2025-09-20T09:07:34.1190306Z Requirement already satisfied: httpx==0.28.1 in ./.venv/lib/python3.13/site-packages (from -r ../pki_service/requirements.txt (line 12)) (0.28.1)
+2025-09-20T09:07:34.1194597Z Requirement already satisfied: idna==3.10 in ./.venv/lib/python3.13/site-packages (from -r ../pki_service/requirements.txt (line 13)) (3.10)
+2025-09-20T09:07:34.1680911Z Collecting Mako==1.3.9 (from -r ../pki_service/requirements.txt (line 14))
+2025-09-20T09:07:34.1992420Z   Downloading Mako-1.3.9-py3-none-any.whl.metadata (2.9 kB)
+2025-09-20T09:07:34.2534547Z Collecting MarkupSafe==3.0.2 (from -r ../pki_service/requirements.txt (line 15))
+2025-09-20T09:07:34.2565320Z   Downloading MarkupSafe-3.0.2-cp313-cp313-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (4.0 kB)
+2025-09-20T09:07:34.2603164Z Requirement already satisfied: psec==1.3.0 in ./.venv/lib/python3.13/site-packages (from -r ../pki_service/requirements.txt (line 16)) (1.3.0)
+2025-09-20T09:07:34.2607574Z Requirement already satisfied: pyasn1==0.6.1 in ./.venv/lib/python3.13/site-packages (from -r ../pki_service/requirements.txt (line 17)) (0.6.1)
+2025-09-20T09:07:34.2612426Z Requirement already satisfied: pycparser==2.23 in ./.venv/lib/python3.13/site-packages (from -r ../pki_service/requirements.txt (line 18)) (2.23)
+2025-09-20T09:07:34.2616880Z Requirement already satisfied: pycryptodome==3.23.0 in ./.venv/lib/python3.13/site-packages (from -r ../pki_service/requirements.txt (line 19)) (3.23.0)
+2025-09-20T09:07:34.2621433Z Requirement already satisfied: pydantic==2.11.9 in ./.venv/lib/python3.13/site-packages (from -r ../pki_service/requirements.txt (line 20)) (2.11.9)
+2025-09-20T09:07:34.2625863Z Requirement already satisfied: pydantic_core==2.33.2 in ./.venv/lib/python3.13/site-packages (from -r ../pki_service/requirements.txt (line 21)) (2.33.2)
+2025-09-20T09:07:34.2630400Z Requirement already satisfied: PyJWT==2.10.1 in ./.venv/lib/python3.13/site-packages (from -r ../pki_service/requirements.txt (line 22)) (2.10.1)
+2025-09-20T09:07:34.2634995Z Requirement already satisfied: python-json-logger==3.3.0 in ./.venv/lib/python3.13/site-packages (from -r ../pki_service/requirements.txt (line 23)) (3.3.0)
+2025-09-20T09:07:34.2639227Z Requirement already satisfied: sniffio==1.3.1 in ./.venv/lib/python3.13/site-packages (from -r ../pki_service/requirements.txt (line 24)) (1.3.1)
+2025-09-20T09:07:34.2643805Z Requirement already satisfied: starlette==0.47.3 in ./.venv/lib/python3.13/site-packages (from -r ../pki_service/requirements.txt (line 25)) (0.47.3)
+2025-09-20T09:07:34.2648143Z Requirement already satisfied: typing_extensions==4.15.0 in ./.venv/lib/python3.13/site-packages (from -r ../pki_service/requirements.txt (line 26)) (4.15.0)
+2025-09-20T09:07:34.2652753Z Requirement already satisfied: uvicorn==0.35.0 in ./.venv/lib/python3.13/site-packages (from -r ../pki_service/requirements.txt (line 27)) (0.35.0)
+2025-09-20T09:07:34.2803475Z Requirement already satisfied: typing-inspection>=0.4.0 in ./.venv/lib/python3.13/site-packages (from pydantic==2.11.9->-r ../pki_service/requirements.txt (line 20)) (0.4.1)
+2025-09-20T09:07:34.3097224Z Downloading Mako-1.3.9-py3-none-any.whl (78 kB)
+2025-09-20T09:07:34.3240933Z Downloading MarkupSafe-3.0.2-cp313-cp313-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (23 kB)
+2025-09-20T09:07:34.3538388Z Installing collected packages: MarkupSafe, Mako
+2025-09-20T09:07:34.4236952Z 
+2025-09-20T09:07:34.4278916Z Successfully installed Mako-1.3.9 MarkupSafe-3.0.2
+2025-09-20T09:07:34.4807930Z ##[group]Run cd crypto_service
+2025-09-20T09:07:34.4808220Z [36;1mcd crypto_service[0m
+2025-09-20T09:07:34.4808490Z [36;1mpython -m pip install -r requirements.txt[0m
+2025-09-20T09:07:34.4808882Z [36;1mnohup uvicorn app.main:app --host 0.0.0.0 --port 8001 > crypto.log 2>&1 &[0m
+2025-09-20T09:07:34.4809245Z [36;1mecho $! > crypto.pid[0m
+2025-09-20T09:07:34.4839309Z shell: /usr/bin/bash -e {0}
+2025-09-20T09:07:34.4839527Z env:
+2025-09-20T09:07:34.4839768Z   pythonLocation: /opt/hostedtoolcache/Python/3.13.7/x64
+2025-09-20T09:07:34.4840275Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.13.7/x64/lib/pkgconfig
+2025-09-20T09:07:34.4840687Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.13.7/x64
+2025-09-20T09:07:34.4841028Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.13.7/x64
+2025-09-20T09:07:34.4841361Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.13.7/x64
+2025-09-20T09:07:34.4841698Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.13.7/x64/lib
+2025-09-20T09:07:34.4842017Z ##[endgroup]
+2025-09-20T09:07:37.0891394Z Collecting annotated-types==0.7.0 (from -r requirements.txt (line 1))
+2025-09-20T09:07:37.0903608Z   Using cached annotated_types-0.7.0-py3-none-any.whl.metadata (15 kB)
+2025-09-20T09:07:37.1068390Z Collecting anyio==4.10.0 (from -r requirements.txt (line 2))
+2025-09-20T09:07:37.1079640Z   Using cached anyio-4.10.0-py3-none-any.whl.metadata (4.0 kB)
+2025-09-20T09:07:37.1199108Z Collecting asn1crypto==1.5.1 (from -r requirements.txt (line 3))
+2025-09-20T09:07:37.1209993Z   Using cached asn1crypto-1.5.1-py2.py3-none-any.whl.metadata (13 kB)
+2025-09-20T09:07:37.1363818Z Collecting certifi==2025.8.3 (from -r requirements.txt (line 4))
+2025-09-20T09:07:37.1374739Z   Using cached certifi-2025.8.3-py3-none-any.whl.metadata (2.4 kB)
+2025-09-20T09:07:37.2359234Z Collecting cffi==2.0.0 (from -r requirements.txt (line 5))
+2025-09-20T09:07:37.2374305Z   Using cached cffi-2.0.0-cp313-cp313-manylinux2014_x86_64.manylinux_2_17_x86_64.whl.metadata (2.6 kB)
+2025-09-20T09:07:37.2517840Z Collecting click==8.2.1 (from -r requirements.txt (line 6))
+2025-09-20T09:07:37.2528968Z   Using cached click-8.2.1-py3-none-any.whl.metadata (2.5 kB)
+2025-09-20T09:07:37.4137738Z Collecting cryptography==45.0.7 (from -r requirements.txt (line 7))
+2025-09-20T09:07:37.4149511Z   Using cached cryptography-45.0.7-cp311-abi3-manylinux_2_34_x86_64.whl.metadata (5.7 kB)
+2025-09-20T09:07:37.4313961Z Collecting fastapi-slim==0.116.1 (from -r requirements.txt (line 8))
+2025-09-20T09:07:37.4324794Z   Using cached fastapi_slim-0.116.1-py3-none-any.whl.metadata (28 kB)
+2025-09-20T09:07:37.5471088Z Collecting greenlet==3.2.4 (from -r requirements.txt (line 9))
+2025-09-20T09:07:37.5483014Z   Using cached greenlet-3.2.4-cp313-cp313-manylinux_2_24_x86_64.manylinux_2_28_x86_64.whl.metadata (4.1 kB)
+2025-09-20T09:07:37.5570546Z Collecting h11==0.16.0 (from -r requirements.txt (line 10))
+2025-09-20T09:07:37.5581443Z   Using cached h11-0.16.0-py3-none-any.whl.metadata (8.3 kB)
+2025-09-20T09:07:37.5725375Z Collecting httpcore==1.0.9 (from -r requirements.txt (line 11))
+2025-09-20T09:07:37.5736326Z   Using cached httpcore-1.0.9-py3-none-any.whl.metadata (21 kB)
+2025-09-20T09:07:37.5910050Z Collecting httpx==0.28.1 (from -r requirements.txt (line 12))
+2025-09-20T09:07:37.5920969Z   Using cached httpx-0.28.1-py3-none-any.whl.metadata (7.1 kB)
+2025-09-20T09:07:37.6031077Z Collecting idna==3.10 (from -r requirements.txt (line 13))
+2025-09-20T09:07:37.6042956Z   Using cached idna-3.10-py3-none-any.whl.metadata (10 kB)
+2025-09-20T09:07:37.6131488Z Collecting psec==1.3.0 (from -r requirements.txt (line 14))
+2025-09-20T09:07:37.6142355Z   Using cached psec-1.3.0-py3-none-any.whl.metadata (2.4 kB)
+2025-09-20T09:07:37.6309511Z Collecting pyasn1==0.6.1 (from -r requirements.txt (line 15))
+2025-09-20T09:07:37.6320376Z   Using cached pyasn1-0.6.1-py3-none-any.whl.metadata (8.4 kB)
+2025-09-20T09:07:37.6404733Z Collecting pycparser==2.23 (from -r requirements.txt (line 16))
+2025-09-20T09:07:37.6415787Z   Using cached pycparser-2.23-py3-none-any.whl.metadata (993 bytes)
+2025-09-20T09:07:37.7155980Z Collecting pycryptodome==3.23.0 (from -r requirements.txt (line 17))
+2025-09-20T09:07:37.7167659Z   Using cached pycryptodome-3.23.0-cp37-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (3.4 kB)
+2025-09-20T09:07:37.8166465Z Collecting pydantic==2.11.9 (from -r requirements.txt (line 18))
+2025-09-20T09:07:37.8177985Z   Using cached pydantic-2.11.9-py3-none-any.whl.metadata (68 kB)
+2025-09-20T09:07:38.3989534Z Collecting pydantic_core==2.33.2 (from -r requirements.txt (line 19))
+2025-09-20T09:07:38.4003549Z   Using cached pydantic_core-2.33.2-cp313-cp313-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (6.8 kB)
+2025-09-20T09:07:38.4155859Z Collecting PyJWT==2.10.1 (from -r requirements.txt (line 20))
+2025-09-20T09:07:38.4167481Z   Using cached PyJWT-2.10.1-py3-none-any.whl.metadata (4.0 kB)
+2025-09-20T09:07:38.4335223Z Collecting python-json-logger==3.3.0 (from -r requirements.txt (line 21))
+2025-09-20T09:07:38.4347076Z   Using cached python_json_logger-3.3.0-py3-none-any.whl.metadata (4.0 kB)
+2025-09-20T09:07:38.4437501Z Collecting sniffio==1.3.1 (from -r requirements.txt (line 22))
+2025-09-20T09:07:38.4448947Z   Using cached sniffio-1.3.1-py3-none-any.whl.metadata (3.9 kB)
+2025-09-20T09:07:38.5008339Z Collecting starlette==0.47.3 (from -r requirements.txt (line 23))
+2025-09-20T09:07:38.5020137Z   Using cached starlette-0.47.3-py3-none-any.whl.metadata (6.2 kB)
+2025-09-20T09:07:38.5346825Z Collecting typing-inspection==0.4.1 (from -r requirements.txt (line 24))
+2025-09-20T09:07:38.5358586Z   Using cached typing_inspection-0.4.1-py3-none-any.whl.metadata (2.6 kB)
+2025-09-20T09:07:38.5568394Z Collecting typing_extensions==4.15.0 (from -r requirements.txt (line 25))
+2025-09-20T09:07:38.5580134Z   Using cached typing_extensions-4.15.0-py3-none-any.whl.metadata (3.3 kB)
+2025-09-20T09:07:38.5794583Z Collecting uvicorn==0.35.0 (from -r requirements.txt (line 26))
+2025-09-20T09:07:38.5806003Z   Using cached uvicorn-0.35.0-py3-none-any.whl.metadata (6.5 kB)
+2025-09-20T09:07:38.6802262Z Using cached annotated_types-0.7.0-py3-none-any.whl (13 kB)
+2025-09-20T09:07:38.6813544Z Using cached anyio-4.10.0-py3-none-any.whl (107 kB)
+2025-09-20T09:07:38.6825348Z Using cached asn1crypto-1.5.1-py2.py3-none-any.whl (105 kB)
+2025-09-20T09:07:38.6837084Z Using cached certifi-2025.8.3-py3-none-any.whl (161 kB)
+2025-09-20T09:07:38.6849720Z Using cached cffi-2.0.0-cp313-cp313-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (219 kB)
+2025-09-20T09:07:38.6862013Z Using cached click-8.2.1-py3-none-any.whl (102 kB)
+2025-09-20T09:07:38.6873787Z Using cached cryptography-45.0.7-cp311-abi3-manylinux_2_34_x86_64.whl (4.5 MB)
+2025-09-20T09:07:38.6917096Z Using cached fastapi_slim-0.116.1-py3-none-any.whl (95 kB)
+2025-09-20T09:07:38.6928635Z Using cached pydantic-2.11.9-py3-none-any.whl (444 kB)
+2025-09-20T09:07:38.6943017Z Using cached starlette-0.47.3-py3-none-any.whl (72 kB)
+2025-09-20T09:07:38.6954634Z Using cached greenlet-3.2.4-cp313-cp313-manylinux_2_24_x86_64.manylinux_2_28_x86_64.whl (610 kB)
+2025-09-20T09:07:38.6969648Z Using cached h11-0.16.0-py3-none-any.whl (37 kB)
+2025-09-20T09:07:38.6980769Z Using cached httpcore-1.0.9-py3-none-any.whl (78 kB)
+2025-09-20T09:07:38.6992478Z Using cached httpx-0.28.1-py3-none-any.whl (73 kB)
+2025-09-20T09:07:38.7003642Z Using cached idna-3.10-py3-none-any.whl (70 kB)
+2025-09-20T09:07:38.7014702Z Using cached psec-1.3.0-py3-none-any.whl (27 kB)
+2025-09-20T09:07:38.7025691Z Using cached pyasn1-0.6.1-py3-none-any.whl (83 kB)
+2025-09-20T09:07:38.7036959Z Using cached pycparser-2.23-py3-none-any.whl (118 kB)
+2025-09-20T09:07:38.7048935Z Using cached pycryptodome-3.23.0-cp37-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (2.3 MB)
+2025-09-20T09:07:38.7076710Z Using cached pydantic_core-2.33.2-cp313-cp313-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (2.0 MB)
+2025-09-20T09:07:38.7102144Z Using cached PyJWT-2.10.1-py3-none-any.whl (22 kB)
+2025-09-20T09:07:38.7113141Z Using cached python_json_logger-3.3.0-py3-none-any.whl (15 kB)
+2025-09-20T09:07:38.7124362Z Using cached sniffio-1.3.1-py3-none-any.whl (10 kB)
+2025-09-20T09:07:38.7135074Z Using cached typing_inspection-0.4.1-py3-none-any.whl (14 kB)
+2025-09-20T09:07:38.7145937Z Using cached typing_extensions-4.15.0-py3-none-any.whl (44 kB)
+2025-09-20T09:07:38.7156723Z Using cached uvicorn-0.35.0-py3-none-any.whl (66 kB)
+2025-09-20T09:07:38.7987510Z Installing collected packages: asn1crypto, typing_extensions, sniffio, python-json-logger, PyJWT, pycryptodome, pycparser, pyasn1, idna, h11, greenlet, click, certifi, annotated-types, uvicorn, typing-inspection, pydantic_core, httpcore, cffi, anyio, starlette, pydantic, httpx, cryptography, psec, fastapi-slim
+2025-09-20T09:07:40.8135907Z 
+2025-09-20T09:07:40.8171414Z Successfully installed PyJWT-2.10.1 annotated-types-0.7.0 anyio-4.10.0 asn1crypto-1.5.1 certifi-2025.8.3 cffi-2.0.0 click-8.2.1 cryptography-45.0.7 fastapi-slim-0.116.1 greenlet-3.2.4 h11-0.16.0 httpcore-1.0.9 httpx-0.28.1 idna-3.10 psec-1.3.0 pyasn1-0.6.1 pycparser-2.23 pycryptodome-3.23.0 pydantic-2.11.9 pydantic_core-2.33.2 python-json-logger-3.3.0 sniffio-1.3.1 starlette-0.47.3 typing-inspection-0.4.1 typing_extensions-4.15.0 uvicorn-0.35.0
+2025-09-20T09:07:41.0581903Z ##[group]Run cd pki_service
+2025-09-20T09:07:41.0582346Z [36;1mcd pki_service[0m
+2025-09-20T09:07:41.0582782Z [36;1mpython -m pip install -r requirements.txt[0m
+2025-09-20T09:07:41.0583452Z [36;1mnohup uvicorn app.main:app --host 0.0.0.0 --port 8000 > pki.log 2>&1 &[0m
+2025-09-20T09:07:41.0584082Z [36;1mecho $! > pki.pid[0m
+2025-09-20T09:07:41.0627609Z shell: /usr/bin/bash -e {0}
+2025-09-20T09:07:41.0627975Z env:
+2025-09-20T09:07:41.0628372Z   pythonLocation: /opt/hostedtoolcache/Python/3.13.7/x64
+2025-09-20T09:07:41.0629093Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.13.7/x64/lib/pkgconfig
+2025-09-20T09:07:41.0629771Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.13.7/x64
+2025-09-20T09:07:41.0630645Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.13.7/x64
+2025-09-20T09:07:41.0631320Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.13.7/x64
+2025-09-20T09:07:41.0631973Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.13.7/x64/lib
+2025-09-20T09:07:41.0632564Z ##[endgroup]
+2025-09-20T09:07:41.4570493Z Requirement already satisfied: annotated-types==0.7.0 in /opt/hostedtoolcache/Python/3.13.7/x64/lib/python3.13/site-packages (from -r requirements.txt (line 1)) (0.7.0)
+2025-09-20T09:07:41.4575731Z Requirement already satisfied: anyio==4.10.0 in /opt/hostedtoolcache/Python/3.13.7/x64/lib/python3.13/site-packages (from -r requirements.txt (line 2)) (4.10.0)
+2025-09-20T09:07:41.4580512Z Requirement already satisfied: asn1crypto==1.5.1 in /opt/hostedtoolcache/Python/3.13.7/x64/lib/python3.13/site-packages (from -r requirements.txt (line 3)) (1.5.1)
+2025-09-20T09:07:41.4585377Z Requirement already satisfied: certifi==2025.8.3 in /opt/hostedtoolcache/Python/3.13.7/x64/lib/python3.13/site-packages (from -r requirements.txt (line 4)) (2025.8.3)
+2025-09-20T09:07:41.4590084Z Requirement already satisfied: cffi==2.0.0 in /opt/hostedtoolcache/Python/3.13.7/x64/lib/python3.13/site-packages (from -r requirements.txt (line 5)) (2.0.0)
+2025-09-20T09:07:41.4594856Z Requirement already satisfied: click==8.2.1 in /opt/hostedtoolcache/Python/3.13.7/x64/lib/python3.13/site-packages (from -r requirements.txt (line 6)) (8.2.1)
+2025-09-20T09:07:41.4599289Z Requirement already satisfied: cryptography==45.0.7 in /opt/hostedtoolcache/Python/3.13.7/x64/lib/python3.13/site-packages (from -r requirements.txt (line 7)) (45.0.7)
+2025-09-20T09:07:41.4604274Z Requirement already satisfied: fastapi-slim==0.116.1 in /opt/hostedtoolcache/Python/3.13.7/x64/lib/python3.13/site-packages (from -r requirements.txt (line 8)) (0.116.1)
+2025-09-20T09:07:41.4608649Z Requirement already satisfied: greenlet==3.2.4 in /opt/hostedtoolcache/Python/3.13.7/x64/lib/python3.13/site-packages (from -r requirements.txt (line 9)) (3.2.4)
+2025-09-20T09:07:41.4613271Z Requirement already satisfied: h11==0.16.0 in /opt/hostedtoolcache/Python/3.13.7/x64/lib/python3.13/site-packages (from -r requirements.txt (line 10)) (0.16.0)
+2025-09-20T09:07:41.4617823Z Requirement already satisfied: httpcore==1.0.9 in /opt/hostedtoolcache/Python/3.13.7/x64/lib/python3.13/site-packages (from -r requirements.txt (line 11)) (1.0.9)
+2025-09-20T09:07:41.4622538Z Requirement already satisfied: httpx==0.28.1 in /opt/hostedtoolcache/Python/3.13.7/x64/lib/python3.13/site-packages (from -r requirements.txt (line 12)) (0.28.1)
+2025-09-20T09:07:41.4627086Z Requirement already satisfied: idna==3.10 in /opt/hostedtoolcache/Python/3.13.7/x64/lib/python3.13/site-packages (from -r requirements.txt (line 13)) (3.10)
+2025-09-20T09:07:41.5103527Z Collecting Mako==1.3.9 (from -r requirements.txt (line 14))
+2025-09-20T09:07:41.5116620Z   Using cached Mako-1.3.9-py3-none-any.whl.metadata (2.9 kB)
+2025-09-20T09:07:41.5576628Z Collecting MarkupSafe==3.0.2 (from -r requirements.txt (line 15))
+2025-09-20T09:07:41.5588779Z   Using cached MarkupSafe-3.0.2-cp313-cp313-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (4.0 kB)
+2025-09-20T09:07:41.5608948Z Requirement already satisfied: psec==1.3.0 in /opt/hostedtoolcache/Python/3.13.7/x64/lib/python3.13/site-packages (from -r requirements.txt (line 16)) (1.3.0)
+2025-09-20T09:07:41.5613585Z Requirement already satisfied: pyasn1==0.6.1 in /opt/hostedtoolcache/Python/3.13.7/x64/lib/python3.13/site-packages (from -r requirements.txt (line 17)) (0.6.1)
+2025-09-20T09:07:41.5618185Z Requirement already satisfied: pycparser==2.23 in /opt/hostedtoolcache/Python/3.13.7/x64/lib/python3.13/site-packages (from -r requirements.txt (line 18)) (2.23)
+2025-09-20T09:07:41.5623112Z Requirement already satisfied: pycryptodome==3.23.0 in /opt/hostedtoolcache/Python/3.13.7/x64/lib/python3.13/site-packages (from -r requirements.txt (line 19)) (3.23.0)
+2025-09-20T09:07:41.5627519Z Requirement already satisfied: pydantic==2.11.9 in /opt/hostedtoolcache/Python/3.13.7/x64/lib/python3.13/site-packages (from -r requirements.txt (line 20)) (2.11.9)
+2025-09-20T09:07:41.5632256Z Requirement already satisfied: pydantic_core==2.33.2 in /opt/hostedtoolcache/Python/3.13.7/x64/lib/python3.13/site-packages (from -r requirements.txt (line 21)) (2.33.2)
+2025-09-20T09:07:41.5636720Z Requirement already satisfied: PyJWT==2.10.1 in /opt/hostedtoolcache/Python/3.13.7/x64/lib/python3.13/site-packages (from -r requirements.txt (line 22)) (2.10.1)
+2025-09-20T09:07:41.5641386Z Requirement already satisfied: python-json-logger==3.3.0 in /opt/hostedtoolcache/Python/3.13.7/x64/lib/python3.13/site-packages (from -r requirements.txt (line 23)) (3.3.0)
+2025-09-20T09:07:41.5645802Z Requirement already satisfied: sniffio==1.3.1 in /opt/hostedtoolcache/Python/3.13.7/x64/lib/python3.13/site-packages (from -r requirements.txt (line 24)) (1.3.1)
+2025-09-20T09:07:41.5650514Z Requirement already satisfied: starlette==0.47.3 in /opt/hostedtoolcache/Python/3.13.7/x64/lib/python3.13/site-packages (from -r requirements.txt (line 25)) (0.47.3)
+2025-09-20T09:07:41.5655130Z Requirement already satisfied: typing_extensions==4.15.0 in /opt/hostedtoolcache/Python/3.13.7/x64/lib/python3.13/site-packages (from -r requirements.txt (line 26)) (4.15.0)
+2025-09-20T09:07:41.5659623Z Requirement already satisfied: uvicorn==0.35.0 in /opt/hostedtoolcache/Python/3.13.7/x64/lib/python3.13/site-packages (from -r requirements.txt (line 27)) (0.35.0)
+2025-09-20T09:07:41.5814376Z Requirement already satisfied: typing-inspection>=0.4.0 in /opt/hostedtoolcache/Python/3.13.7/x64/lib/python3.13/site-packages (from pydantic==2.11.9->-r requirements.txt (line 20)) (0.4.1)
+2025-09-20T09:07:41.6091900Z Using cached Mako-1.3.9-py3-none-any.whl (78 kB)
+2025-09-20T09:07:41.6104089Z Using cached MarkupSafe-3.0.2-cp313-cp313-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (23 kB)
+2025-09-20T09:07:41.6327685Z Installing collected packages: MarkupSafe, Mako
+2025-09-20T09:07:41.7068854Z 
+2025-09-20T09:07:41.7103366Z Successfully installed Mako-1.3.9 MarkupSafe-3.0.2
+2025-09-20T09:07:41.7635042Z ##[group]Run # wait for crypto service
+2025-09-20T09:07:41.7635363Z [36;1m# wait for crypto service[0m
+2025-09-20T09:07:41.7635830Z [36;1mtimeout 30s bash -c 'until curl -f http://localhost:8001/health > /dev/null 2>&1; do sleep 2; done'[0m
+2025-09-20T09:07:41.7636274Z [36;1mecho "crypto service is ready"[0m
+2025-09-20T09:07:41.7636504Z [36;1m[0m
+2025-09-20T09:07:41.7636675Z [36;1m# wait for pki service[0m
+2025-09-20T09:07:41.7637073Z [36;1mtimeout 30s bash -c 'until curl -f http://localhost:8000/health > /dev/null 2>&1; do sleep 2; done'[0m
+2025-09-20T09:07:41.7637513Z [36;1mecho "pki service is ready"[0m
+2025-09-20T09:07:41.7668223Z shell: /usr/bin/bash -e {0}
+2025-09-20T09:07:41.7668441Z env:
+2025-09-20T09:07:41.7668687Z   pythonLocation: /opt/hostedtoolcache/Python/3.13.7/x64
+2025-09-20T09:07:41.7669084Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.13.7/x64/lib/pkgconfig
+2025-09-20T09:07:41.7669477Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.13.7/x64
+2025-09-20T09:07:41.7670023Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.13.7/x64
+2025-09-20T09:07:41.7670478Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.13.7/x64
+2025-09-20T09:07:41.7670826Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.13.7/x64/lib
+2025-09-20T09:07:41.7671107Z ##[endgroup]
+2025-09-20T09:08:11.7760066Z ##[error]Process completed with exit code 124.
+2025-09-20T09:08:11.7809203Z ##[group]Run # stop crypto service if running
+2025-09-20T09:08:11.7809558Z [36;1m# stop crypto service if running[0m
+2025-09-20T09:08:11.7810172Z [36;1mif [ -f crypto_service/crypto.pid ]; then[0m
+2025-09-20T09:08:11.7810517Z [36;1m  kill $(cat crypto_service/crypto.pid) || true[0m
+2025-09-20T09:08:11.7810799Z [36;1m  rm crypto_service/crypto.pid[0m
+2025-09-20T09:08:11.7811033Z [36;1mfi[0m
+2025-09-20T09:08:11.7811185Z [36;1m[0m
+2025-09-20T09:08:11.7811362Z [36;1m# stop pki service if running  [0m
+2025-09-20T09:08:11.7811614Z [36;1mif [ -f pki_service/pki.pid ]; then[0m
+2025-09-20T09:08:11.7811884Z [36;1m  kill $(cat pki_service/pki.pid) || true[0m
+2025-09-20T09:08:11.7812145Z [36;1m  rm pki_service/pki.pid[0m
+2025-09-20T09:08:11.7812353Z [36;1mfi[0m
+2025-09-20T09:08:11.7812509Z [36;1m  [0m
+2025-09-20T09:08:11.7843027Z shell: /usr/bin/bash -e {0}
+2025-09-20T09:08:11.7843244Z env:
+2025-09-20T09:08:11.7843519Z   pythonLocation: /opt/hostedtoolcache/Python/3.13.7/x64
+2025-09-20T09:08:11.7843935Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.13.7/x64/lib/pkgconfig
+2025-09-20T09:08:11.7844336Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.13.7/x64
+2025-09-20T09:08:11.7844664Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.13.7/x64
+2025-09-20T09:08:11.7844995Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.13.7/x64
+2025-09-20T09:08:11.7845327Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.13.7/x64/lib
+2025-09-20T09:08:11.7845610Z ##[endgroup]
+2025-09-20T09:08:11.7908321Z /home/runner/work/_temp/ee6bbd84-cf51-41cd-8d6b-d9ed40deb243.sh: line 3: kill: (2305) - No such process
+2025-09-20T09:08:11.7931108Z /home/runner/work/_temp/ee6bbd84-cf51-41cd-8d6b-d9ed40deb243.sh: line 9: kill: (2331) - No such process
+2025-09-20T09:08:11.8025513Z Post job cleanup.
+2025-09-20T09:08:11.8953309Z [command]/usr/bin/git version
+2025-09-20T09:08:11.8991021Z git version 2.51.0
+2025-09-20T09:08:11.9035018Z Temporarily overriding HOME='/home/runner/work/_temp/5db86ceb-3a42-493e-944c-94df1c01eea3' before making global git config changes
+2025-09-20T09:08:11.9036357Z Adding repository directory to the temporary git global config as a safe directory
+2025-09-20T09:08:11.9048656Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/fmcrypto/fmcrypto
+2025-09-20T09:08:11.9084343Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2025-09-20T09:08:11.9116547Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2025-09-20T09:08:11.9343758Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2025-09-20T09:08:11.9366395Z http.https://github.com/.extraheader
+2025-09-20T09:08:11.9379234Z [command]/usr/bin/git config --local --unset-all http.https://github.com/.extraheader
+2025-09-20T09:08:11.9410649Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2025-09-20T09:08:11.9750405Z Cleaning up orphan processes

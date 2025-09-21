@@ -43,6 +43,11 @@ jobs:
         run: |
           cd crypto_service
           python -m pip install -r requirements.txt
+          # set env vars for CI environment
+          export HSM_IP="localhost"
+          export HSM_PORT="1234"
+          export CRYPTO_HSM="GP"
+          export ENVIRONMENT="test"
           nohup uvicorn app.main:app --host 0.0.0.0 --port 8001 > crypto.log 2>&1 &
           echo $! > crypto.pid
         
@@ -50,17 +55,38 @@ jobs:
         run: |
           cd pki_service
           python -m pip install -r requirements.txt
+          # set env vars for CI environment
+          export KC_CLI="pki-ci"
+          export ENVIRONMENT="test"
           nohup uvicorn app.main:app --host 0.0.0.0 --port 8000 > pki.log 2>&1 &
           echo $! > pki.pid
           
       - name: wait for services to start
         run: |
-          # wait for crypto service
-          timeout 30s bash -c 'until curl -f http://localhost:8001/health > /dev/null 2>&1; do sleep 2; done'
+          # give services time to start
+          sleep 10
+          
+          # check if services are running
+          echo "Checking crypto service status..."
+          if ! ps aux | grep -v grep | grep "crypto_service"; then
+            echo "Crypto service not running, checking logs:"
+            cat crypto_service/crypto.log || echo "No crypto log found"
+          fi
+          
+          echo "Checking pki service status..."
+          if ! ps aux | grep -v grep | grep "pki_service"; then
+            echo "PKI service not running, checking logs:"
+            cat pki_service/pki.log || echo "No pki log found"
+          fi
+          
+          # wait for crypto service with extended timeout
+          echo "Waiting for crypto service health check..."
+          timeout 60s bash -c 'until curl -f http://localhost:8001/health > /dev/null 2>&1; do sleep 3; done'
           echo "crypto service is ready"
           
-          # wait for pki service
-          timeout 30s bash -c 'until curl -f http://localhost:8000/health > /dev/null 2>&1; do sleep 2; done'
+          # wait for pki service with extended timeout
+          echo "Waiting for pki service health check..."
+          timeout 60s bash -c 'until curl -f http://localhost:8000/health > /dev/null 2>&1; do sleep 3; done'
           echo "pki service is ready"
           
       - name: run tests with coverage
