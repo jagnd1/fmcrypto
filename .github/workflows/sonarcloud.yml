@@ -48,6 +48,7 @@ jobs:
           export HSM_PORT="1234"
           export CRYPTO_HSM="GP"
           export ENVIRONMENT="test"
+          export PYTHONPATH="../:$PYTHONPATH"
           nohup uvicorn app.main:app --host 0.0.0.0 --port 8001 > crypto.log 2>&1 &
           echo $! > crypto.pid
         
@@ -58,6 +59,7 @@ jobs:
           # set env vars for CI environment
           export KC_CLI="pki-ci"
           export ENVIRONMENT="test"
+          export PYTHONPATH="../:$PYTHONPATH"
           nohup uvicorn app.main:app --host 0.0.0.0 --port 8000 > pki.log 2>&1 &
           echo $! > pki.pid
           
