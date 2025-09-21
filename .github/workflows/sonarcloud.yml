@@ -114,6 +114,11 @@ jobs:
             --cov-report=html:htmlcov \
             --junitxml=test-results.xml \
             -v
+          
+          # Fix coverage.xml sources to be relative paths for SonarCloud
+          sed -i 's|<source>/home/runner/work/fmcrypto/fmcrypto/common</source>|<source>common</source>|g' coverage.xml
+          sed -i 's|<source>/home/runner/work/fmcrypto/fmcrypto/crypto_service</source>|<source>crypto_service</source>|g' coverage.xml
+          sed -i 's|<source>/home/runner/work/fmcrypto/fmcrypto/pki_service</source>|<source>pki_service</source>|g' coverage.xml
             
       - name: stop services
         if: always()
