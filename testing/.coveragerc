@@ -1,8 +1,8 @@
 [run]
-# Enable relative file paths for SonarCloud compatibility
+# Official SonarCloud configuration - enable relative paths
 relative_files = True
 
-# Source directories to measure coverage for (relative to testing/ directory)
+# Source directories to measure coverage for
 source = ../crypto_service, ../pki_service, ../common
 
 # Omit test files from coverage measurement

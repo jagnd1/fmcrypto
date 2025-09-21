@@ -106,17 +106,14 @@ jobs:
           export PROTOCOL="http"
           export PYTHONPATH="../:$PYTHONPATH"
           
-          # Use .coveragerc configuration for consistent coverage paths
+          # Official SonarCloud recommended command structure
           pytest unit_tests/ integration_tests/ e2e_tests/ \
-            --cov \
+            --cov=../crypto_service \
+            --cov=../pki_service \
+            --cov=../common \
             --cov-report=xml:coverage.xml \
-            --cov-report=html:htmlcov \
             --junitxml=test-results.xml \
             -v
-          
-          # Fix absolute paths in coverage.xml for SonarCloud compatibility
-          sed -i 's|filename="/home/runner/work/fmcrypto/fmcrypto/|filename="|g' coverage.xml
-          sed -i 's|filename="home/runner/work/fmcrypto/fmcrypto/|filename="|g' coverage.xml
             
       - name: stop services
         if: always()
