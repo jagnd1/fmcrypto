@@ -129,6 +129,17 @@ jobs:
             kill $(cat pki_service/pki.pid) || true
             rm pki_service/pki.pid
           fi
+
+      - name: verify coverage files
+        run: |
+          echo "Checking for coverage files..."
+          ls -la testing/ | grep -E "(coverage\.xml|test-results\.xml)" || echo "Coverage files not found in testing/"
+          if [ -f testing/coverage.xml ]; then
+            echo "Coverage file found with $(wc -l < testing/coverage.xml) lines"
+            head -10 testing/coverage.xml
+          else
+            echo "ERROR: coverage.xml not found!"
+          fi
             
       - name: sonarcloud scan
         uses: SonarSource/sonarcloud-github-action@master
