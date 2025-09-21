@@ -1,0 +1,25 @@
+[run]
+# Enable relative file paths for SonarCloud compatibility
+relative_files = True
+
+# Source directories to measure coverage for (relative to testing/ directory)
+source = ../crypto_service, ../pki_service, ../common
+
+# Omit test files from coverage measurement
+omit = 
+    */test_*.py
+    */tests/*
+    */*_test.py
+    */test.py
+    testing/*
+    **/__pycache__/*
+    */.venv/*
+
+[report]
+# Reporting configuration
+show_missing = True
+skip_covered = False
+
+[xml]
+# XML output configuration for SonarCloud (relative to testing/ directory)
+output = coverage.xml

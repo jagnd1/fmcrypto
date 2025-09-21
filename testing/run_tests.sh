@@ -39,18 +39,11 @@ export PROTOCOL="http"
 # add parent directory to python path for imports
 export PYTHONPATH="../:$PYTHONPATH"
 
-# run all tests with combined coverage
+# run all tests with combined coverage (using .coveragerc configuration)
 echo "running all tests and generating combined coverage report..."
 pytest unit_tests/ integration_tests/ e2e_tests/ \
-    --cov=../crypto_service \
-    --cov=../pki_service \
-    --cov=../common \
-    --cov-report=xml:coverage.xml \
-    --cov-report=html:htmlcov \
-    --cov-report=term-missing \
-    --cov-fail-under=50 \
-    --junitxml=test-results.xml \
-    -v
+    --cov \
+    --cov-fail-under=50
 
 echo "tests completed successfully!"
 echo "coverage report generated: coverage.xml"

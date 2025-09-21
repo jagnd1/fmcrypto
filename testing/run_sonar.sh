@@ -53,7 +53,7 @@ sonar-scanner \
     -Dsonar.exclusions="**/test_*.py,**/tests/**,**/*_test.py,**/test.py,**/Dockerfile*,**/docker-compose*.yml,**/.dockerignore,**/requirements.txt,**/healthcheck.sh,**/DEPLOYMENT.md,**/README.md,**/run.py,**/.venv/**,**/__pycache__/**" \
     -Dsonar.python.coverage.reportPaths=testing/coverage.xml \
     -Dsonar.python.xunit.reportPath=testing/test-results.xml \
-    -Dsonar.coverage.exclusions="**/test_*.py,**/tests/**,**/*_test.py,**/test.py,**/__init__.py" \
+    -Dsonar.coverage.exclusions="**/test_*.py,**/tests/**,**/*_test.py,**/test.py" \
     -Dsonar.sourceEncoding=UTF-8 \
     -Dsonar.python.version=3.13
 
