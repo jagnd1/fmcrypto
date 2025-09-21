@@ -119,6 +119,11 @@ jobs:
           sed -i 's|filename="/home/runner/work/fmcrypto/fmcrypto/|filename="|g' coverage.xml
           sed -i 's|filename="home/runner/work/fmcrypto/fmcrypto/|filename="|g' coverage.xml
           
+          # FINAL FIX: Fix sources section to match sonar.sources=.
+          sed -i 's|<source>../common</source>|<source>common</source>|g' coverage.xml
+          sed -i 's|<source>../crypto_service</source>|<source>crypto_service</source>|g' coverage.xml
+          sed -i 's|<source>../pki_service</source>|<source>pki_service</source>|g' coverage.xml
+          
           # Verify the fix worked
           echo "=== Verifying path fix ==="
           grep 'filename=' coverage.xml | head -3
