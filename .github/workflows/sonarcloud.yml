@@ -130,16 +130,27 @@ jobs:
             rm pki_service/pki.pid
           fi
 
-      - name: verify coverage files
+      - name: verify coverage files and debug paths
         run: |
-          echo "Checking for coverage files..."
+          echo "=== Checking for coverage files ==="
           ls -la testing/ | grep -E "(coverage\.xml|test-results\.xml)" || echo "Coverage files not found in testing/"
+          
+          echo "=== Coverage file analysis ==="
           if [ -f testing/coverage.xml ]; then
             echo "Coverage file found with $(wc -l < testing/coverage.xml) lines"
-            head -10 testing/coverage.xml
+            echo "Coverage file size: $(ls -lh testing/coverage.xml | awk '{print $5}')"
+            echo "=== First 15 lines of coverage.xml ==="
+            head -15 testing/coverage.xml
+            echo "=== Sample file paths from coverage.xml ==="
+            grep 'filename=' testing/coverage.xml | head -5
           else
             echo "ERROR: coverage.xml not found!"
           fi
+          
+          echo "=== Current working directory structure ==="
+          find . -name "*.py" -path "./crypto_service/*" | head -3
+          find . -name "*.py" -path "./pki_service/*" | head -3
+          find . -name "*.py" -path "./common/*" | head -3
             
       - name: sonarcloud scan
         uses: SonarSource/sonarcloud-github-action@master
