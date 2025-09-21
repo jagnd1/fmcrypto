@@ -23,3 +23,7 @@ skip_covered = False
 [xml]
 # XML output configuration for SonarCloud (relative to testing/ directory)
 output = coverage.xml
+
+[html]
+# HTML output configuration
+directory = htmlcov

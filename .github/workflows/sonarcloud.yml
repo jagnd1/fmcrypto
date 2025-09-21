@@ -109,6 +109,8 @@ jobs:
           # Use .coveragerc configuration for consistent coverage paths
           pytest unit_tests/ integration_tests/ e2e_tests/ \
             --cov \
+            --cov-report=xml:coverage.xml \
+            --cov-report=html:htmlcov \
             --junitxml=test-results.xml \
             -v
             
