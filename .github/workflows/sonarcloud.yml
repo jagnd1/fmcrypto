@@ -113,6 +113,10 @@ jobs:
             --cov-report=html:htmlcov \
             --junitxml=test-results.xml \
             -v
+          
+          # Fix absolute paths in coverage.xml for SonarCloud compatibility
+          sed -i 's|filename="/home/runner/work/fmcrypto/fmcrypto/|filename="|g' coverage.xml
+          sed -i 's|filename="home/runner/work/fmcrypto/fmcrypto/|filename="|g' coverage.xml
             
       - name: stop services
         if: always()
