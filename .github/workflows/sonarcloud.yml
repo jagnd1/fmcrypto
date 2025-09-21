@@ -106,35 +106,31 @@ jobs:
           export PROTOCOL="http"
           export PYTHONPATH="../:$PYTHONPATH"
           
-          # Generate coverage with proper relative paths for SonarCloud
+          # Generate coverage for SonarCloud (using simple format)
           pytest unit_tests/ integration_tests/ e2e_tests/ \
             --cov=../crypto_service \
             --cov=../pki_service \
             --cov=../common \
-            --cov-report=xml:coverage.xml \
+            --cov-report=term-missing \
             --junitxml=test-results.xml \
             -v
           
-          # CRITICAL: Fix absolute paths to relative paths for SonarCloud
-          sed -i 's|filename="/home/runner/work/fmcrypto/fmcrypto/|filename="|g' coverage.xml
-          sed -i 's|filename="home/runner/work/fmcrypto/fmcrypto/|filename="|g' coverage.xml
+          # Generate SonarCloud-compatible coverage using coverage.py directly
+          cd ..
+          coverage run --source=crypto_service,pki_service,common -m pytest testing/unit_tests/ testing/integration_tests/ testing/e2e_tests/ -q
+          coverage xml -o testing/coverage.xml
+          cd testing
           
-          # FINAL FIX: Fix sources section to match sonar.sources=.
-          sed -i 's|<source>../common</source>|<source>common</source>|g' coverage.xml
-          sed -i 's|<source>../crypto_service</source>|<source>crypto_service</source>|g' coverage.xml
-          sed -i 's|<source>../pki_service</source>|<source>pki_service</source>|g' coverage.xml
-          
-          # Verify ALL fixes worked (paths AND sources)
-          echo "=== Verifying path fix ==="
-          grep 'filename=' coverage.xml | head -3
-          echo "=== Verifying sources section ==="
-          grep '<source>' coverage.xml
-          
-          # DIAGNOSTIC: Show coverage file stats for SonarCloud
-          echo "=== Coverage file diagnostic ==="
-          echo "File size: $(ls -lh coverage.xml | awk '{print $5}')"
-          echo "Line count: $(wc -l < coverage.xml)"
-          echo "Coverage rate: $(grep 'line-rate=' coverage.xml | head -1)"
+          # Verify coverage file generated correctly
+          echo "=== Coverage file verification ==="
+          if [ -f coverage.xml ]; then
+            echo "Coverage file generated successfully"
+            echo "File size: $(ls -lh coverage.xml | awk '{print $5}')"
+            echo "First few lines:"
+            head -10 coverage.xml
+          else
+            echo "ERROR: coverage.xml not generated"
+          fi
             
       - name: stop services
         if: always()
@@ -174,14 +170,13 @@ jobs:
           find . -name "*.py" -path "./common/*" | head -3
             
       - name: sonarcloud scan
-        uses: SonarSource/sonarcloud-github-action@master
+        uses: SonarSource/sonarqube-scan-action@v5.0.0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         with:
           projectBaseDir: .
-          # use the sonar-project.properties file from testing directory
-          # override key settings for sonarcloud
+          # use the sonar-project.properties file from project root
           args: >
             -Dsonar.projectKey=jagnd1_fmcrypto
             -Dsonar.organization=jagnd1
