@@ -1,0 +1,8 @@
+# These owners will be the default owners for everything in the repo
+* @jagnd1
+
+# Specific file protections
+*.py @jagnd1
+*.js @jagnd1
+*.ts @jagnd1
+*.sol @jagnd1

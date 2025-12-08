@@ -68,3 +68,17 @@ Thumbs.db
 # Temporary files
 *.tmp
 *.temp
+
+# Node
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# Environment
+.env.local
+*.key
+*.pem
+
+# Crypto sensitive
+private_keys/
+wallets/
