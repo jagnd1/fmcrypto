@@ -1,0 +1,71 @@
+[
+  {
+    "name": "AES128 CBC Encryption Success",
+    "endpoint": "/v1/crypto/data_encr",
+    "method": "POST",
+    "payload": {
+      "key_lmk": "RDAxMTJEMEFCMDBFMDAwMEQ0MkRFOEU5MjU4RjkyOTBDMTJDQUQwQjZEM0JCMDk0MjBDRkFBMTMwNTY3REExODUzMEU0MTM2MTJFQzA5MUYyM0JFMjg0RTNDQkYxOTFBNkM0NURERkY5RDJCQUExMg==",
+      "encr_mode": "CBC",
+      "iv": "1234567812345678",
+      "msg": "1234567812345678",
+      "algo": "A128"
+    },
+    "expected": {
+      "status": "success"
+    }
+  },
+  {
+    "name": "AES128 CBC Decryption Success",
+    "endpoint": "/v1/crypto/data_decr",
+    "method": "POST",
+    "payload": {
+      "key_lmk": "RDAxMTJEMEFCMDBFMDAwMEQ0MkRFOEU5MjU4RjkyOTBDMTJDQUQwQjZEM0JCMDk0MjBDRkFBMTMwNTY3REExODUzMEU0MTM2MTJFQzA5MUYyM0JFMjg0RTNDQkYxOTFBNkM0NURERkY5RDJCQUExMg==",
+      "encr_mode": "CBC",
+      "iv": "1234567812345678",
+      "encr_msg": "a252f698cfddc8fdef524419b02ff72e",
+      "algo": "A128"
+    },
+    "expected": {
+      "status": "success",
+      "msg": "31323334353637383132333435363738"
+    }
+  },
+  {
+    "name": "Encryption Error - Invalid Key",
+    "endpoint": "/v1/crypto/data_encr",
+    "method": "POST",
+    "payload": {
+      "key_lmk": "INVALID_KEY",
+      "encr_mode": "CBC",
+      "iv": "1234567812345678",
+      "msg": "1234567812345678",
+      "algo": "A128"
+    },
+    "expected_status": 422
+  },
+  {
+    "name": "Encryption Error - Missing IV for CBC",
+    "endpoint": "/v1/crypto/data_encr",
+    "method": "POST",
+    "payload": {
+      "key_lmk": "RDAxMTJEMEFCMDBFMDAwMEQ0MkRFOEU5MjU4RjkyOTBDMTJDQUQwQjZEM0JCMDk0MjBDRkFBMTMwNTY3REExODUzMEU0MTM2MTJFQzA5MUYyM0JFMjg0RTNDQkYxOTFBNkM0NURERkY5RDJCQUExMg==",
+      "encr_mode": "CBC",
+      "msg": "1234567812345678",
+      "algo": "A128"
+    },
+    "expected_status": 422
+  },
+  {
+    "name": "Decryption Error - Wrong Key Length",
+    "endpoint": "/v1/crypto/data_decr",
+    "method": "POST",
+    "payload": {
+      "key_lmk": "RDAxMTJQ",
+      "encr_mode": "CBC",
+      "iv": "1234567812345678",
+      "encr_msg": "a252f698cfddc8fdef524419b02ff72e",
+      "algo": "A128"
+    },
+    "expected_status": 422
+  }
+]
