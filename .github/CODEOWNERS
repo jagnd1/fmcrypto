@@ -2,7 +2,7 @@
 * @jagnd1
 
 # Specific file protections
-*.py @jagnd1
+*.go @jagnd1
 *.js @jagnd1
 *.ts @jagnd1
 *.sol @jagnd1

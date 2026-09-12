@@ -64,15 +64,6 @@ cd services/crypto_svc && make test    # go test ./...
 
 See [`services/crypto_svc/docs/testing.md`](services/crypto_svc/docs/testing.md).
 
-## legacy python implementation
-
-The repository previously shipped a Python/FastAPI implementation
-(`crypto_service/`, `common/`, `testing/`, `deployment/`). The Go service is a
-fresh rewrite on the `crud` framework honoring the same API contract; the Python
-tree served as the behavioral reference and its known-answer vectors. It is
-**scheduled for removal** (recoverable via the `v1.0.0-python` tag). All new
-development targets the Go service.
-
 ## license
 
 MIT — see [LICENSE](LICENSE) and [LICENSES.md](LICENSES.md) for third-party

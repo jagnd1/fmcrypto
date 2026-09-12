@@ -24,8 +24,7 @@ SOFTWARE.
 
 THIRD-PARTY COMPONENTS
 
-DUKPT Implementation (services/crypto_svc/internal/crypto/dukpt.go;
-legacy Python: common/utils/sw/dukpt.py)
+DUKPT Implementation (services/crypto_svc/internal/crypto/dukpt)
 ============================================================
 
 This implementation is based on the reference implementation provided by the

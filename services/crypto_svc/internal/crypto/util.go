@@ -89,8 +89,7 @@ func pkcs7Pad(data []byte, blockSize int) ([]byte, error) {
 	return out, nil
 }
 
-// pkcs7Unpad removes PKCS#7 padding. It tolerates the Python behavior of
-// skipping unpadding when the plaintext is already block-aligned.
+// pkcs7Unpad removes PKCS#7 padding.
 func pkcs7Unpad(data []byte, blockSize int) ([]byte, error) {
 	if len(data) == 0 || len(data)%blockSize != 0 {
 		return nil, ErrInvalid{Msg: "invalid padded data length"}

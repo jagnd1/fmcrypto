@@ -122,9 +122,8 @@ func TestEncryptDecryptCBC(t *testing.T) {
 	if err != nil {
 		t.Fatalf("decrypt: %v", err)
 	}
-	// The Python decrypt returns PKCS7-unpadded data ONLY when the plaintext is
-	// not exactly one block long; an 8-byte message comes back as the padded
-	// 16-byte block. Replicate that quirk exactly.
+	// PKCS7-unpadding is applied only when the plaintext is not exactly one
+	// block long; an 8-byte message comes back as the padded 16-byte block.
 	assertHexEq(t, pt, "12345678123456780808080808080808")
 	// ECB round trip
 	ctECB, err := Encrypt(AlgoA128, testLMK(t), EncrModeECB, vecAESBlob, iv, msg)
@@ -181,7 +180,7 @@ func TestRSAKpSignVerify(t *testing.T) {
 
 func TestECCKpSignVerify(t *testing.T) {
 	msg := mustHex(t, "1234567890")
-	// verify python-generated pk parses and a Go signature verifies
+	// verify the reference pk parses and a signature verifies
 	pkDER := mustHex(t, vecECCPK)
 	skLMK := vecECCSkLmk
 	sig, err := AsymSign(AlgoECP256, testLMK(t), skLMK, msg)
@@ -190,7 +189,7 @@ func TestECCKpSignVerify(t *testing.T) {
 	}
 	ok, err := Verify(AlgoECP256, pkDER, msg, sig)
 	if err != nil || !ok {
-		t.Fatalf("verify python pk: %v ok=%v", err, ok)
+		t.Fatalf("verify pk: %v ok=%v", err, ok)
 	}
 	// full Go round trip
 	gpk, gsk, err := GenKP(AlgoECP256, testLMK(t))

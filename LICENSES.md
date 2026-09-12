@@ -7,7 +7,7 @@ the Go port of the fmcrypto crypto service (`services/crypto_svc`).
 
 fmcrypto Service is licensed under the MIT License - see [LICENSE](LICENSE) file for details.
 
-## Go Dependencies
+## Runtime Dependencies
 
 The runtime is **stdlib-first**: the only third-party runtime dependencies are
 the gRPC transport stack.

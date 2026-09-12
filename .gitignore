@@ -1,50 +1,18 @@
-# Python
-__pycache__/
-*.py[cod]
-*$py.class
-*.so
-.Python
-build/
-develop-eggs/
-dist/
-downloads/
-eggs/
-.eggs/
-lib/
-lib64/
-parts/
-sdist/
-var/
-wheels/
-*.egg-info/
-.installed.cfg
-*.egg
+# Go build artifacts
+/services/crypto_svc/crypto
+/services/crypto_svc/provision
+/services/crypto_svc/minttoken
+*.test
+*.out
 
-# Virtual environments
+# Environment
 .env
-.venv
-env/
-venv/
-ENV/
-env.bak/
-venv.bak/
+.env.local
+.env.*.local
 
-# Testing
-.pytest_cache/
-.coverage
-htmlcov/
-coverage.xml
-test-results.xml
+# Service runtime
 *.log
-
-# Service management
 *.pid
-crypto.log
-pki.log
-
-# Internal documentation (not for public repo)
-GITHUB_SETUP.md
-PROJECT_CONTEXT.md
 
 # IDE
 .vscode/
@@ -64,6 +32,10 @@ Thumbs.db
 
 # SonarQube
 .scannerwork/
+coverage.xml
+test-results.xml
+htmlcov/
+.coverage
 
 # Temporary files
 *.tmp
@@ -74,14 +46,15 @@ node_modules/
 npm-debug.log
 yarn-error.log
 
-# Environment
-.env.local
+# Keys & secrets (never commit)
 *.key
 *.pem
+private_keys/
+secrets/
 
 # Crypto sensitive
-private_keys/
 wallets/crud
 
-# nested reference repo (crud) — separate git
-crud/
+# Internal documentation (not for public repo)
+GITHUB_SETUP.md
+PROJECT_CONTEXT.md
