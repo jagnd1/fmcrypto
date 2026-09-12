@@ -81,4 +81,7 @@ yarn-error.log
 
 # Crypto sensitive
 private_keys/
-wallets/
+wallets/crud
+
+# nested reference repo (crud) — separate git
+crud/

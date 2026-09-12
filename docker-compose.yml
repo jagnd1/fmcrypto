@@ -1,0 +1,24 @@
+services:
+  crypto:
+    build:
+      context: ./services
+      dockerfile: crypto_svc/Dockerfile
+    environment:
+      PORT: ${PORT:-8001}
+      GRPC_PORT: ${GRPC_PORT:-50051}
+      # auth is opt-in: set ZITADEL_ISSUER/AUDIENCE (+ client for introspection)
+      ZITADEL_ISSUER: ${ZITADEL_ISSUER:-}
+      AUDIENCE: ${AUDIENCE:-}
+      ZITADEL_CLIENT_ID: ${ZITADEL_CLIENT_ID:-}
+      ZITADEL_CLIENT_SECRET: ${ZITADEL_CLIENT_SECRET:-}
+      API_KEY_PREFIX: ${API_KEY_PREFIX:-crypto_}
+      API_KEYS: ${API_KEYS:-}
+      API_KEY_ROLES: ${API_KEY_ROLES:-admin}
+    ports:
+      - "${PORT:-8001}:8001"
+      - "${GRPC_PORT:-50051}:50051"
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "-", "http://localhost:8001/healthz"]
+      interval: 5s
+      timeout: 5s
+      retries: 5

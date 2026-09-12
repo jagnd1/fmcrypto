@@ -16,7 +16,7 @@ If you find a bug or have a suggestion:
 1. Fork the repository
 2. Create a new branch (`git checkout -b feature/your-feature-name`)
 3. Make your changes
-4. Test thoroughly
+4. Test thoroughly (`make test`, `go vet ./...`)
 5. Commit with clear messages
 6. Push to your fork
 7. Submit a Pull Request
@@ -31,8 +31,15 @@ If you find a bug or have a suggestion:
 
 ## Code Standards
 
-- Python code should follow PEP 8
-- JavaScript/TypeScript should follow ESLint rules
+- **Go** — the service is written in Go; run `gofmt` before committing and keep
+  it `go vet`-clean. Follow idiomatic Go (stdlib-first, no framework).
+- **Architecture** — layering is `handlers → services (usecase) → HSM seam →
+  crypto engine`; the usecase layer depends only on the `hsm.HSM` interface so
+  a real HSM (PS/AT) can replace the software `GP` implementation without
+  touching it. Keep the seam.
+- **Crypto** — use the Go stdlib (`crypto/*`) and the existing hand-rolled
+  primitives; do not add third-party crypto libraries. Retain the ASC X9 DUKPT
+  attribution (see LICENSE/LICENSES.md).
 - Add comments for complex logic
 - Update README.md for new features
 - Maintain compatibility with existing dependencies
@@ -40,6 +47,7 @@ If you find a bug or have a suggestion:
 ## Security
 
 - Never commit private keys or sensitive data
+- Keys are always LMK-wrapped (TR-31 key blocks) — never store clear keys
 - Follow secure coding practices for crypto operations
 - Report security vulnerabilities privately
 
