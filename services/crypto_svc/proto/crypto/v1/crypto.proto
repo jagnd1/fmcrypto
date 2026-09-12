@@ -6,7 +6,7 @@ option go_package = "cryptosvc/gen/crypto/v1;cryptov1";
 
 // CryptoService mirrors every REST endpoint of the crypto service over gRPC.
 // Machine clients authenticate with an API key (Bearer metadata) via the
-// server-side interceptor; no JWT auth on gRPC.
+// server-side interceptor.
 service CryptoService {
   rpc KpGen(KpGenRequest) returns (KpGenResponse);
   rpc GenSign(GenSignRequest) returns (GenSignResponse);

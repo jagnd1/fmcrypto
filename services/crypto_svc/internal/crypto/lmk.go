@@ -2,7 +2,6 @@ package crypto
 
 import (
 	"crypto/des"
-	"encoding/hex"
 	"fmt"
 )
 
@@ -121,21 +120,10 @@ func GetKCV(algo Algo, lmk []byte, keyBlob string) ([]byte, error) {
 	return mac[:3], nil
 }
 
-// Rand generates n cryptographically secure random bytes (hex string).
-func Rand(n int) (string, error) {
-	b, err := RandomBytes(n)
-	if err != nil {
-		return "", err
-	}
-	return hex.EncodeToString(b), nil
-}
-
 // RandomBytes returns n cryptographically secure random bytes.
 func RandomBytes(n int) ([]byte, error) {
 	return randomBytes(n)
 }
-
-func needGCM(mode EncrMode) bool { return mode == EncrModeGCM }
 
 func blockEncrypt(algo Algo, mode EncrMode, key, iv, data []byte) ([]byte, error) {
 	switch mode {
@@ -179,7 +167,6 @@ func ecbEncrypt(algo Algo, key, data []byte) ([]byte, error) {
 	if algo == AlgoTDES {
 		return tdesECBEncrypt(key, data)
 	}
-	// AES-ECB across multiple blocks.
 	block, err := newAESBlock(key)
 	if err != nil {
 		return nil, err
@@ -211,9 +198,4 @@ func gcmDecrypt(algo Algo, key, iv, data []byte) ([]byte, error) {
 		return nil, ErrInvalid{Msg: "gcm not supported for tdes"}
 	}
 	return aesGCMOpen(key, iv, data)
-}
-
-// keyVal is a helper to decode a hex or raw key blob into a clear key.
-func keyVal(algo Algo, lmk []byte, blob []byte) ([]byte, error) {
-	return UnwrapKey(algo, lmk, string(blob))
 }

@@ -15,7 +15,6 @@ Messages mirror the REST JSON models (same field names; wire is protobuf).
 
 Strict API key: each call must carry `authorization: Bearer crypto_<hex>`
 metadata, validated by `APIKeyInterceptor` against the stateless hash set.
-No JWT on gRPC.
 
 ## grpcurl
 

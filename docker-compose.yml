@@ -6,11 +6,9 @@ services:
     environment:
       PORT: ${PORT:-8001}
       GRPC_PORT: ${GRPC_PORT:-50051}
-      # auth is opt-in: set ZITADEL_ISSUER/AUDIENCE (+ client for introspection)
-      ZITADEL_ISSUER: ${ZITADEL_ISSUER:-}
-      AUDIENCE: ${AUDIENCE:-}
-      ZITADEL_CLIENT_ID: ${ZITADEL_CLIENT_ID:-}
-      ZITADEL_CLIENT_SECRET: ${ZITADEL_CLIENT_SECRET:-}
+      # HSM provider: GP (software) / PS / AT (real HSMs)
+      CRYPTO_HSM: ${CRYPTO_HSM:-GP}
+      # headless service-to-service auth via API keys (blank API_KEYS = open REST)
       API_KEY_PREFIX: ${API_KEY_PREFIX:-crypto_}
       API_KEYS: ${API_KEYS:-}
       API_KEY_ROLES: ${API_KEY_ROLES:-admin}

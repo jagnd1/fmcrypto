@@ -56,20 +56,6 @@ func aesECBEncrypt(key, data []byte) ([]byte, error) {
 	return out, nil
 }
 
-// aesECBDecrypt decrypts a single AES block under ECB.
-func aesECBDecrypt(key, data []byte) ([]byte, error) {
-	if len(data) != aes.BlockSize {
-		return nil, ErrInvalid{Msg: "aes ecb: data must be exactly 16 bytes"}
-	}
-	block, err := aes.NewCipher(key)
-	if err != nil {
-		return nil, fmt.Errorf("%w: %v", ErrInvalid{}, err)
-	}
-	out := make([]byte, aes.BlockSize)
-	block.Decrypt(out, data)
-	return out, nil
-}
-
 // aesCBCMAC computes the ISO/IEC 9797-1 MAC algorithm 1 (CBC-MAC) over data
 // using AES-CBC with a zero IV; returns the last block (16 bytes). Data must be
 // a multiple of 16 bytes (callers pad explicitly).

@@ -46,7 +46,7 @@ const (
 //
 // CryptoService mirrors every REST endpoint of the crypto service over gRPC.
 // Machine clients authenticate with an API key (Bearer metadata) via the
-// server-side interceptor; no JWT auth on gRPC.
+// server-side interceptor.
 type CryptoServiceClient interface {
 	KpGen(ctx context.Context, in *KpGenRequest, opts ...grpc.CallOption) (*KpGenResponse, error)
 	GenSign(ctx context.Context, in *GenSignRequest, opts ...grpc.CallOption) (*GenSignResponse, error)
@@ -273,7 +273,7 @@ func (c *cryptoServiceClient) CrlMgmt(ctx context.Context, in *CrlMgmtRequest, o
 //
 // CryptoService mirrors every REST endpoint of the crypto service over gRPC.
 // Machine clients authenticate with an API key (Bearer metadata) via the
-// server-side interceptor; no JWT auth on gRPC.
+// server-side interceptor.
 type CryptoServiceServer interface {
 	KpGen(context.Context, *KpGenRequest) (*KpGenResponse, error)
 	GenSign(context.Context, *GenSignRequest) (*GenSignResponse, error)

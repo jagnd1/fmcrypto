@@ -9,27 +9,22 @@ import (
 )
 
 type Config struct {
-	Port              int
-	GRPCPort          int
-	ReadTimeout       time.Duration
-	WriteTimeout      time.Duration
-	IdleTimeout       time.Duration
-	ZitadelIssuer     string
-	Audience          string
-	ZitadelClientID   string
-	ZitadelClientSecret string
-	APIKeyPrefix      string
-	APIKeys           []string // sha256 hex hashes of accepted API keys (stateless)
-	APIKeyRoles       []string // roles granted to API-key callers (default: admin)
-	SoftwareLMK       string   // hex; empty → default sha256("lmk") software-HSM LMK
-	HSMType           string   // HSM provider: GP (software), PS/AT (future real HSMs)
+	Port         int
+	GRPCPort     int
+	ReadTimeout  time.Duration
+	WriteTimeout time.Duration
+	IdleTimeout  time.Duration
+	HSMType      string // HSM provider: GP (software), PS/AT (future real HSMs)
+	SoftwareLMK  string // hex; empty → default sha256("lmk") software-HSM LMK
+
+	APIKeyPrefix string   // prefix for expected API keys (default crypto_)
+	APIKeys      []string // sha256 hex hashes of accepted API keys (stateless)
+	APIKeyRoles  []string // roles granted to API-key callers (default: admin)
 }
 
-// AuthEnabled is true when OIDC is configured; REST then requires either a
-// bearer JWT or an API key. gRPC always requires an API key.
-func (c Config) AuthEnabled() bool {
-	return c.ZitadelIssuer != "" && c.Audience != ""
-}
+// AuthEnabled reports whether API keys are configured; when false, REST
+// endpoints are open (PermitAll). gRPC always requires an API key.
+func (c Config) AuthEnabled() bool { return len(c.APIKeys) > 0 }
 
 func Load(args []string, lookup func(string) (string, bool)) (Config, error) {
 	fs := flag.NewFlagSet("crypto", flag.ContinueOnError)
@@ -55,20 +50,16 @@ func Load(args []string, lookup func(string) (string, bool)) (Config, error) {
 	}
 
 	return Config{
-		Port:                *port,
-		GRPCPort:            *grpcPort,
-		ReadTimeout:         *read,
-		WriteTimeout:        *write,
-		IdleTimeout:         *idle,
-		ZitadelIssuer:       envStr(lookup, "ZITADEL_ISSUER", ""),
-		Audience:            envStr(lookup, "AUDIENCE", ""),
-		ZitadelClientID:     envStr(lookup, "ZITADEL_CLIENT_ID", ""),
-		ZitadelClientSecret: envStr(lookup, "ZITADEL_CLIENT_SECRET", ""),
-		APIKeyPrefix:        envStr(lookup, "API_KEY_PREFIX", "crypto_"),
-		APIKeys:             splitEnv(lookup, "API_KEYS"),
-		APIKeyRoles:         splitEnv(lookup, "API_KEY_ROLES"),
-		SoftwareLMK:         envStr(lookup, "SOFTWARE_LMK", ""),
-		HSMType:             envStr(lookup, "CRYPTO_HSM", "GP"),
+		Port:         *port,
+		GRPCPort:     *grpcPort,
+		ReadTimeout:  *read,
+		WriteTimeout: *write,
+		IdleTimeout:  *idle,
+		HSMType:      envStr(lookup, "CRYPTO_HSM", "GP"),
+		SoftwareLMK:  envStr(lookup, "SOFTWARE_LMK", ""),
+		APIKeyPrefix: envStr(lookup, "API_KEY_PREFIX", "crypto_"),
+		APIKeys:      splitEnv(lookup, "API_KEYS"),
+		APIKeyRoles:  splitEnv(lookup, "API_KEY_ROLES"),
 	}, nil
 }
 

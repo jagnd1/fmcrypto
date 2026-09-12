@@ -52,8 +52,8 @@ cd services/crypto_svc && make run    # REST :8001, gRPC :50051
 docker compose up --build             # containerized, from repo root
 ```
 
-Auth is opt-in: leave `ZITADEL_ISSUER`/`AUDIENCE` blank for open REST endpoints,
-or enable dual-auth (JWT or API key) and gRPC API-key auth. See
+The service is headless (service-to-service): auth is API-key based. Set
+`API_KEYS` to require keys on REST; gRPC always requires a key. See
 [`services/crypto_svc/docs/setup.md`](services/crypto_svc/docs/setup.md).
 
 ## testing

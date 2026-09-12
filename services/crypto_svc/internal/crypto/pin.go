@@ -1,8 +1,6 @@
 package crypto
 
-import (
-	"encoding/hex"
-)
+import ()
 
 // PIN block helpers mirroring psec.pinblock.encode_pinblock_iso_0 and the
 // trans_pin flow (ISO 9564-1 Format 0 / ANSI X9.8).
@@ -56,43 +54,4 @@ func EncodePinblockISO0(pin, panHex string) ([]byte, error) {
 	}
 	// pad rest with 0 already
 	return xor(block, panBlock), nil
-}
-
-// getPanField builds the 16-byte PAN field (format nibble 4 + PAN hex).
-func getPanField(pan []byte) ([]byte, error) {
-	s := "4" + hex.EncodeToString(pan)
-	if len(s) > 32 {
-		return nil, ErrInvalid{Msg: "pan field too long"}
-	}
-	for len(s) < 32 {
-		s += "0"
-	}
-	return hexDecode(s)
-}
-
-// ParsePinBlock extracts the clear PIN digits from a decrypted Format-4-style
-// pin field (0x0 <len> <digits> 0xF...). Returns the pin as a digit string.
-func parsePinField(field []byte) (string, error) {
-	if len(field) < 2 {
-		return "", ErrInvalid{Msg: "pin field too short"}
-	}
-	pinLen := int(field[1] >> 4)
-	if pinLen < 4 || pinLen > 16 || 1+(pinLen+1)/2 > len(field) {
-		return "", ErrInvalid{Msg: "pin length invalid"}
-	}
-	var out []byte
-	for i := 0; i < pinLen; i++ {
-		half := field[1+i/2]
-		var d byte
-		if i%2 == 0 {
-			d = half >> 4
-		} else {
-			d = half & 0x0F
-		}
-		if d > 9 {
-			return "", ErrInvalid{Msg: "pin digit invalid"}
-		}
-		out = append(out, '0'+d)
-	}
-	return string(out), nil
 }

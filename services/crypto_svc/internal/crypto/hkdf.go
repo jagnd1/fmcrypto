@@ -3,7 +3,6 @@ package crypto
 import (
 	"crypto/hmac"
 	"crypto/sha256"
-	"encoding/binary"
 )
 
 // hkdfSHA256 implements RFC 5869 HKDF with HMAC-SHA256 using only the stdlib.
@@ -15,8 +14,8 @@ func hkdfSHA256(secret, salt, info []byte, length int) []byte {
 	prk := hmacSHA256(salt, secret)
 	// expand
 	var (
-		out    []byte
-		t      []byte
+		out     []byte
+		t       []byte
 		counter byte = 1
 	)
 	for len(out) < length {
@@ -45,5 +44,3 @@ var x963KDFContext = []byte("ANSI X9.63 KDF Context")
 func ecdhHKDF(sharedSecret []byte, keyLen int) []byte {
 	return hkdfSHA256(sharedSecret, nil, x963KDFContext, keyLen)
 }
-
-var _ = binary.BigEndian

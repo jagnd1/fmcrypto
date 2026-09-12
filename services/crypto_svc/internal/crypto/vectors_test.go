@@ -1,6 +1,12 @@
 package crypto
 
 import (
+	"crypto"
+	"crypto/ecdsa"
+	"crypto/rand"
+	"crypto/rsa"
+	"crypto/sha256"
+	"crypto/x509"
 	"encoding/hex"
 	"testing"
 
@@ -159,10 +165,7 @@ func TestRSAKpSignVerify(t *testing.T) {
 		t.Fatalf("sign: %v", err)
 	}
 	assertHexEq(t, sig, vecRSASig)
-	ok, err := Verify(AlgoR2K, mustHex(t, vecRSAPk), msg, sig)
-	if err != nil || !ok {
-		t.Fatalf("verify: %v ok=%v", err, ok)
-	}
+	assertRSAVerify(t, mustHex(t, vecRSAPk), msg, sig)
 	// full round trip: generate, sign, verify
 	pkDER, skLMK, err := GenKP(AlgoR2K, testLMK(t))
 	if err != nil {
@@ -172,9 +175,19 @@ func TestRSAKpSignVerify(t *testing.T) {
 	if err != nil {
 		t.Fatalf("sign2: %v", err)
 	}
-	ok, err = Verify(AlgoR2K, pkDER, msg, sig2)
-	if err != nil || !ok {
-		t.Fatalf("verify2: %v ok=%v", err, ok)
+	assertRSAVerify(t, pkDER, msg, sig2)
+}
+
+// assertRSAVerify verifies an RSA PKCS#1 v1.5 signature with the stdlib.
+func assertRSAVerify(t *testing.T, pkDER, msg, sig []byte) {
+	t.Helper()
+	pk, err := x509.ParsePKIXPublicKey(pkDER)
+	if err != nil {
+		t.Fatalf("parse pk: %v", err)
+	}
+	digest := sha256.Sum256(msg)
+	if err := rsa.VerifyPKCS1v15(pk.(*rsa.PublicKey), crypto.SHA256, digest[:], sig); err != nil {
+		t.Fatalf("rsa verify: %v", err)
 	}
 }
 
@@ -187,10 +200,7 @@ func TestECCKpSignVerify(t *testing.T) {
 	if err != nil {
 		t.Fatalf("sign: %v", err)
 	}
-	ok, err := Verify(AlgoECP256, pkDER, msg, sig)
-	if err != nil || !ok {
-		t.Fatalf("verify pk: %v ok=%v", err, ok)
-	}
+	assertECDSAVerify(t, pkDER, msg, sig)
 	// full Go round trip
 	gpk, gsk, err := GenKP(AlgoECP256, testLMK(t))
 	if err != nil {
@@ -200,9 +210,19 @@ func TestECCKpSignVerify(t *testing.T) {
 	if err != nil {
 		t.Fatalf("gsign: %v", err)
 	}
-	ok, err = Verify(AlgoECP256, gpk, msg, gsig)
-	if err != nil || !ok {
-		t.Fatalf("gverify: %v ok=%v", err, ok)
+	assertECDSAVerify(t, gpk, msg, gsig)
+}
+
+// assertECDSAVerify verifies an ECDSA (DER) signature with the stdlib.
+func assertECDSAVerify(t *testing.T, pkDER, msg, sig []byte) {
+	t.Helper()
+	pk, err := x509.ParsePKIXPublicKey(pkDER)
+	if err != nil {
+		t.Fatalf("parse pk: %v", err)
+	}
+	digest := sha256.Sum256(msg)
+	if !ecdsa.VerifyASN1(pk.(*ecdsa.PublicKey), digest[:], sig) {
+		t.Fatal("ecdsa verify failed")
 	}
 }
 
@@ -227,7 +247,7 @@ func TestExpKeyStandaloneAndWrapped(t *testing.T) {
 	if string(out) != vecAESBlob {
 		t.Fatalf("standalone export should return key_lmk untouched")
 	}
-	// wrapped: rsa encrypt the clear key, then import back
+	// wrapped: rsa encrypt the clear key, then recover it with the stdlib
 	pk, sk, err := GenKP(AlgoR2K, testLMK(t))
 	if err != nil {
 		t.Fatalf("genkp: %v", err)
@@ -236,13 +256,17 @@ func TestExpKeyStandaloneAndWrapped(t *testing.T) {
 	if err != nil {
 		t.Fatalf("exp wrapped: %v", err)
 	}
-	imp, err := ImpKey(AlgoR2K, testLMK(t), string(sk), AlgoA128, exp)
+	skDER, err := UnwrapKey(AlgoR2K, testLMK(t), string(sk))
 	if err != nil {
-		t.Fatalf("imp: %v", err)
+		t.Fatalf("unwrap sk: %v", err)
 	}
-	val, err := UnwrapKey(AlgoA128, testLMK(t), string(imp))
+	priv, err := x509.ParsePKCS8PrivateKey(skDER)
 	if err != nil {
-		t.Fatalf("unwrap imp: %v", err)
+		t.Fatalf("parse sk: %v", err)
 	}
-	assertHexEq(t, val, vecAESKey)
+	clear, err := rsa.DecryptPKCS1v15(rand.Reader, priv.(*rsa.PrivateKey), exp)
+	if err != nil {
+		t.Fatalf("decrypt: %v", err)
+	}
+	assertHexEq(t, clear, vecAESKey)
 }
