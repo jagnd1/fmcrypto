@@ -1,0 +1,24 @@
+package services
+
+import (
+	"encoding/base64"
+	"strings"
+)
+
+// Base64url helpers mirroring the Python urlsafe_b64encode/decode (padded),
+// with tolerance for missing padding on decode (Android NO_PADDING fix).
+
+func b64Encode(data []byte) string {
+	return base64.URLEncoding.EncodeToString(data)
+}
+
+func b64Decode(s string) ([]byte, error) {
+	if s == "" {
+		return nil, nil
+	}
+	s = strings.TrimSpace(s)
+	if m := len(s) % 4; m != 0 {
+		s += strings.Repeat("=", 4-m)
+	}
+	return base64.URLEncoding.DecodeString(s)
+}

@@ -1,0 +1,242 @@
+syntax = "proto3";
+
+package crypto.v1;
+
+option go_package = "cryptosvc/gen/crypto/v1;cryptov1";
+
+// CryptoService mirrors every REST endpoint of the crypto service over gRPC.
+// Machine clients authenticate with an API key (Bearer metadata) via the
+// server-side interceptor; no JWT auth on gRPC.
+service CryptoService {
+  rpc KpGen(KpGenRequest) returns (KpGenResponse);
+  rpc GenSign(GenSignRequest) returns (GenSignResponse);
+  rpc Ecdh(EcdhRequest) returns (EcdhResponse);
+  rpc ExpKey(ExpKeyRequest) returns (ExpKeyResponse);
+  rpc ExpTr31(ExpTr31Request) returns (ExpTr31Response);
+  rpc RandGen(RandGenRequest) returns (RandGenResponse);
+  rpc ExpTr34(ExpTr34Request) returns (ExpTr34Response);
+  rpc KeyGen(KeyGenRequest) returns (KeyGenResponse);
+  rpc KcvGen(KcvGenRequest) returns (KcvGenResponse);
+  rpc IpekDerive(IpekDeriveRequest) returns (IpekDeriveResponse);
+  rpc DataEncr(DataEncrRequest) returns (DataEncrResponse);
+  rpc DataDecr(DataDecrRequest) returns (DataDecrResponse);
+  rpc Mac(MacRequest) returns (MacResponse);
+  rpc TransPin(TransPinRequest) returns (TransPinResponse);
+  rpc Wrap(WrapRequest) returns (WrapResponse);
+  rpc Unwrap(UnwrapRequest) returns (UnwrapResponse);
+  rpc CertCreate(CertCreateRequest) returns (CertResponse);
+  rpc CertRenew(CertUpdateRequest) returns (CertResponse);
+  rpc CrlMgmt(CrlMgmtRequest) returns (CrlMgmtResponse);
+}
+
+message KpGenRequest {
+  string algo = 1;
+  string use_mode = 2;
+}
+message KpGenResponse {
+  string status = 1;
+  string pk = 2;
+  string sk_lmk = 3;
+}
+
+message GenSignRequest {
+  string msg = 1;
+  string sk_lmk = 2;
+  string algo = 3;
+}
+message GenSignResponse {
+  string status = 1;
+  string signature = 2;
+}
+
+message EcdhRequest {
+  string eph_pk = 1;
+  string algo = 2;
+  string key_type = 3;
+  string use_mode = 4;
+  string shared_info = 5;
+}
+message EcdhResponse {
+  string status = 1;
+  string derived_key = 2;
+  string kcv = 3;
+  string recp_eph_pk = 4;
+}
+
+message ExpKeyRequest {
+  string key_lmk = 1;
+  string kcv = 2;
+  string pk = 3;
+}
+message ExpKeyResponse {
+  string status = 1;
+  string key_pk = 2;
+}
+
+message ExpTr31Request {
+  string key_lmk = 1;
+  string zmk_lmk = 2;
+  string iksn = 3;
+}
+message ExpTr31Response {
+  string status = 1;
+  string key_zmk = 2;
+}
+
+message RandGenRequest {
+  string len = 1;
+}
+message RandGenResponse {
+  string status = 1;
+  string rand_no = 2;
+}
+
+message ExpTr34Request {
+  string kbpk = 1;
+  string kcv = 2;
+  string kdh_cert = 3;
+  string krd_cert = 4;
+  string kdh_sk_lmk = 5;
+}
+message ExpTr34Response {
+  string status = 1;
+  string aa = 2;
+  string ed = 3;
+  string signature = 4;
+}
+
+message KeyGenRequest {
+  string key_type = 1;
+  string use_mode = 2;
+  string algo = 3;
+  string exp_key = 4;
+}
+message KeyGenResponse {
+  string status = 1;
+  string key_lmk = 2;
+  string kcv = 3;
+}
+
+message KcvGenRequest {
+  string key_lmk = 1;
+}
+message KcvGenResponse {
+  string status = 1;
+  string kcv = 2;
+}
+
+message IpekDeriveRequest {
+  string bdk_lmk = 1;
+  string iksn = 2;
+  string tk = 3;
+  string algo = 4;
+  string use_mode = 5;
+}
+message IpekDeriveResponse {
+  string status = 1;
+  string ipek_lmk = 2;
+  string ipek_tk = 3;
+  string kcv = 4;
+}
+
+message DataEncrRequest {
+  string key_lmk = 1;
+  string ksn = 2;
+  string iv = 3;
+  string encr_mode = 4;
+  string msg = 5;
+  string algo = 6;
+}
+message DataEncrResponse {
+  string status = 1;
+  string encr_msg = 2;
+}
+
+message DataDecrRequest {
+  string key_lmk = 1;
+  string ksn = 2;
+  string iv = 3;
+  string encr_mode = 4;
+  string encr_msg = 5;
+  string algo = 6;
+}
+message DataDecrResponse {
+  string status = 1;
+  string msg = 2;
+}
+
+message MacRequest {
+  string key_lmk = 1;
+  string ksn = 2;
+  string mac_mode = 3;
+  string msg = 4;
+  string mac = 5;
+}
+message MacResponse {
+  string status = 1;
+  string mac_resp = 2;
+}
+
+message TransPinRequest {
+  string key_lmk = 1;
+  string ksn = 2;
+  string src_pinblk = 3;
+  string dest_key = 4;
+  string dest_ksn = 5;
+  string pan = 6;
+}
+message TransPinResponse {
+  string status = 1;
+  string dest_pinblk = 2;
+}
+
+message WrapRequest {
+  string algo = 1;
+  string header = 2;
+  string kbpk = 3;
+  string key = 4;
+}
+message WrapResponse {
+  string status = 1;
+  string key_kbpk = 2;
+}
+
+message UnwrapRequest {
+  string key_kbpk = 1;
+  string kbpk = 2;
+}
+message UnwrapResponse {
+  string status = 1;
+  string key = 2;
+}
+
+message CertCreateRequest {
+  string csr = 1;
+  string issuer_cert = 2;
+  string sk_lmk = 3;
+  string cert_level = 4;
+  string algo = 5;
+}
+message CertUpdateRequest {
+  string cert = 1;
+  string issuer_cert = 2;
+  string sk_lmk = 3;
+  string cert_level = 4;
+  string algo = 5;
+}
+message CertResponse {
+  string status = 1;
+  string cert = 2;
+}
+
+message CrlMgmtRequest {
+  string cert = 1;
+  string issuer_cert = 2;
+  string sk_lmk = 3;
+  string algo = 4;
+  string crl = 5;
+}
+message CrlMgmtResponse {
+  string status = 1;
+  string crl = 2;
+}
