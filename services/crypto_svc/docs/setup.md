@@ -22,13 +22,11 @@ cp services/crypto_svc/.env.example .env
 ```
 
 Key vars: `PORT`, `GRPC_PORT`, `CRYPTO_HSM` (provider: `GP` software, future
-`PS`/`AT` real HSMs), `SOFTWARE_LMK` (software-HSM master key), and the auth
-block (`ZITADEL_ISSUER`, `AUDIENCE`, `ZITADEL_CLIENT_ID`,
-`ZITADEL_CLIENT_SECRET`, `API_KEYS`).
+`PS`/`AT` real HSMs), `SOFTWARE_LMK` (software-HSM master key), and the API-key
+auth block (`API_KEY_PREFIX`, `API_KEYS`, `API_KEY_ROLES`).
 
-**Auth is opt-in** — leave the Zitadel vars blank for open endpoints, or set
-them to enable REST dual-auth (JWT or API key). gRPC always requires an API key
-present in `API_KEYS` as a sha256 hex hash:
+**Auth** — set `API_KEYS` (sha256 hex hashes) to require API keys on REST;
+gRPC always requires a key. Generate a hash with:
 
 ```bash
 printf '%s' "<plaintext-key>" | shasum -a 256 | cut -d' ' -f1

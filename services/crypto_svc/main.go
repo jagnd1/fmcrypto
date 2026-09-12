@@ -13,7 +13,6 @@ import (
 	"syscall"
 	"time"
 
-	"common/auth"
 	"common/logging"
 	"common/middleware"
 
@@ -85,29 +84,8 @@ func main() {
 
 	apiMws := []func(http.Handler) http.Handler{}
 	if authEnabled {
-		// REST dual auth: bearer JWT (OIDC/JWKS or introspection) OR API key.
-		var (
-			authn auth.Authenticator
-			err   error
-		)
-		if cfg.ZitadelClientID != "" && cfg.ZitadelClientSecret != "" {
-			authn, err = auth.NewIntrospectionVerifier(ctx, auth.IntrospectionConfig{
-				Issuer:       cfg.ZitadelIssuer,
-				Audience:     cfg.Audience,
-				ClientID:     cfg.ZitadelClientID,
-				ClientSecret: cfg.ZitadelClientSecret,
-			}, auth.ZitadelMapper{}, &http.Client{Timeout: 5 * time.Second})
-		} else {
-			authn, err = auth.NewOIDCVerifier(ctx, auth.VerifierConfig{
-				Issuer:   cfg.ZitadelIssuer,
-				Audience: cfg.Audience,
-			}, auth.ZitadelMapper{}, &http.Client{Timeout: 5 * time.Second})
-		}
-		if err != nil {
-			slog.ErrorContext(ctx, "oidc verifier", "err", err)
-			os.Exit(1)
-		}
-		apiMws = append(apiMws, svcmw.DualAuth(authn, apiKeyVerifier, cfg.APIKeyPrefix))
+		// REST requires an API key when keys are configured; otherwise open.
+		apiMws = append(apiMws, svcmw.APIKeyAuth(apiKeyVerifier))
 	}
 	apiMws = append(apiMws, middleware.MaxBodyBytes(1<<20), middleware.Timeout(5*time.Second))
 

@@ -37,8 +37,6 @@ func TestEnvOverrides(t *testing.T) {
 		"GRPC_PORT":    "50052",
 		"API_KEY_PREFIX": "fmcrypto_",
 		"API_KEYS":     "abc123, def456",
-		"ZITADEL_ISSUER": "http://zitadel:8080",
-		"AUDIENCE":     "project-id",
 	}))
 	if err != nil {
 		t.Fatalf("load: %v", err)
@@ -51,9 +49,6 @@ func TestEnvOverrides(t *testing.T) {
 	}
 	if len(cfg.APIKeys) != 2 || cfg.APIKeys[0] != "abc123" || cfg.APIKeys[1] != "def456" {
 		t.Errorf("api keys = %v", cfg.APIKeys)
-	}
-	if !cfg.AuthEnabled() {
-		t.Error("auth should be enabled when issuer+audience set")
 	}
 }
 
@@ -87,12 +82,12 @@ func TestBadDuration(t *testing.T) {
 
 func TestZeroValueEnv(t *testing.T) {
 	// empty-string env must fall back to defaults, not become empty
-	cfg, err := Load(nil, testLookup(map[string]string{"ZITADEL_ISSUER": ""}))
+	cfg, err := Load(nil, testLookup(map[string]string{"API_KEYS": ""}))
 	if err != nil {
 		t.Fatalf("load: %v", err)
 	}
-	if cfg.ZitadelIssuer != "" {
-		t.Errorf("issuer = %q", cfg.ZitadelIssuer)
+	if len(cfg.APIKeys) != 0 {
+		t.Errorf("api keys = %v", cfg.APIKeys)
 	}
 	if cfg.ReadTimeout != 5*time.Second {
 		t.Errorf("read timeout = %v", cfg.ReadTimeout)

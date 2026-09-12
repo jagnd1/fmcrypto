@@ -23,8 +23,7 @@ go test ./common/... ./crypto_svc/...
 - **`internal/authz`** — role→permission matrix incl. wildcards.
 - **`internal/config`** — defaults, env overrides, flag precedence, invalid
   values.
-- **`services/common`** — the shared framework's own suite: auth (synthetic
-  RS256 JWTs + httptest discovery/JWKS/introspection), middleware, errs.
+- **`services/common`** — the shared framework's own suite: errs, middleware.
 
 Crypto engine known-answer vector tests cover the key-block, symmetric,
 DUKPT, and asymmetric primitives.

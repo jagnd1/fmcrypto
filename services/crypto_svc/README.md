@@ -17,7 +17,7 @@ framework (`services/common`). It serves the fmcrypto crypto/PKI API over
   runtime deps are `grpc` + `protobuf` for the gRPC transport.
 - **Secure**: typed error taxonomy (no internal leakage), panic containment,
   request-id-correlated JSON logs, security headers, body-size limits, per-route
-  deadlines, RS256-only JWT/JWKS with stampede protection.
+  deadlines.
 
 ## Architecture
 
@@ -41,7 +41,7 @@ main.go (composition root)
 | `internal/authz` | RBAC policy (role → `resource:action` permissions) |
 | `internal/dto` | request/response models |
 | `internal/config` | env/flags → typed config |
-| `internal/middleware` | service-local dual-auth (JWT or API key) |
+| `internal/middleware` | service-local API-key auth |
 | `internal/health` | public `/healthz`, `/readyz`, legacy `/health` |
 | `services/common` | shared framework (auth, errs, respond, middleware, …) |
 
@@ -58,10 +58,11 @@ expose the same 19 operations:
 
 ## Auth
 
-- **REST**: dual-mode — a bearer JWT (OIDC/JWKS or introspection) **or** an
-  API key (`X-API-Key` or `Authorization: Bearer <crypto_…>`). Opt-in: with no
-  `ZITADEL_ISSUER`/`AUDIENCE` configured, endpoints are open (`PermitAll`).
-- **gRPC**: API key **only** (strict), via the `APIKeyInterceptor`.
+The service is headless (service-to-service): auth is **API-key based**.
+
+- **REST**: API key (`X-API-Key` or `Authorization: Bearer <crypto_…>`) required
+  when `API_KEYS` is configured; otherwise open (`PermitAll`).
+- **gRPC**: API key always required (strict, via the `APIKeyInterceptor`).
 
 API keys are stateless: sha256 hashes configured via `API_KEYS` (env). See
 `.env.example` and `docs/`.
@@ -80,8 +81,8 @@ Health: `GET /healthz` (liveness) and `GET /readyz` (readiness), both public.
 
 ## Status
 
-Complete: crypto engine, all 19 REST + gRPC operations, HSM seam, dual/REST +
-API-key/gRPC auth, RBAC, health probes, tests, and docs.
+Complete: crypto engine, all 19 REST + gRPC operations, HSM seam, API-key
+auth (REST + gRPC), RBAC, health probes, tests, and docs.
 
 ## Third-party credit
 

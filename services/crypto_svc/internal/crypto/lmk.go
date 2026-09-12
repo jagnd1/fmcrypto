@@ -212,8 +212,3 @@ func gcmDecrypt(algo Algo, key, iv, data []byte) ([]byte, error) {
 	}
 	return aesGCMOpen(key, iv, data)
 }
-
-// keyVal is a helper to decode a hex or raw key blob into a clear key.
-func keyVal(algo Algo, lmk []byte, blob []byte) ([]byte, error) {
-	return UnwrapKey(algo, lmk, string(blob))
-}

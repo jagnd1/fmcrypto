@@ -1,36 +1,21 @@
+// Package auth defines the authentication seam for the crypto service.
+// The service authenticates machine clients with API keys (no IdP); the
+// UserContext flows through the request context for RBAC.
 package auth
 
-import (
-	"context"
-)
+import "context"
 
+// UserContext carries the authenticated principal through the request context.
 type UserContext struct {
 	Subject string
 	OrgID   string
 	Roles   []string
 }
 
-// Authenticator is the transport-level seam: any IdP verifier (Zitadel, Okta,
-// Keycloak) implements it. common/middleware.Auth depends only on this.
-type Authenticator interface {
-	Validate(ctx context.Context, token string) (UserContext, error)
-}
-
-// APIKeyVerifier validates opaque API keys (machine clients). The interface
-// lives here (shared seam); the implementation is service-specific (DB-backed).
+// APIKeyVerifier validates opaque API keys (machine clients). Implemented by
+// the service's stateless key store.
 type APIKeyVerifier interface {
 	ValidateAPIKey(ctx context.Context, key string) (UserContext, error)
-}
-
-// ClaimMapper is the provider seam: only the claim → UserContext shape differs
-// per IdP (roles/org). The generic OIDC verifier handles everything else.
-type ClaimMapper interface {
-	Map(claims map[string]any) (UserContext, error)
-}
-
-type VerifierConfig struct {
-	Issuer   string
-	Audience string
 }
 
 type userCtxKey struct{}
