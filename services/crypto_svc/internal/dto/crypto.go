@@ -1,8 +1,8 @@
 package dto
 
-// Crypto endpoint request/response models. All enum-ish fields (algo, use_mode,
-// key_type, encr_mode, mac_mode) are validated by the service layer, matching the
-// Python API which accepts those as string enums.
+// Crypto endpoint request/response models. Enum-ish fields (algo, use_mode,
+// key_type, encr_mode, mac_mode) are string-valued and validated by the service
+// layer.
 
 type KpGenReq struct {
 	Algo    string `json:"algo"`

@@ -5,8 +5,8 @@ import (
 	"strings"
 )
 
-// Base64url helpers mirroring the Python urlsafe_b64encode/decode (padded),
-// with tolerance for missing padding on decode (Android NO_PADDING fix).
+// Base64url helpers (padded), tolerant of missing padding on decode (the
+// Android NO_PADDING fix).
 
 func b64Encode(data []byte) string {
 	return base64.URLEncoding.EncodeToString(data)

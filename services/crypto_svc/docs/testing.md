@@ -26,8 +26,8 @@ go test ./common/... ./crypto_svc/...
 - **`services/common`** — the shared framework's own suite: auth (synthetic
   RS256 JWTs + httptest discovery/JWKS/introspection), middleware, errs.
 
-Crypto engine vector tests (known-answer tests ported from the Python
-implementation) arrive with Phases 2-4.
+Crypto engine known-answer vector tests cover the key-block, symmetric,
+DUKPT, and asymmetric primitives.
 
 ## Manual verify (live)
 

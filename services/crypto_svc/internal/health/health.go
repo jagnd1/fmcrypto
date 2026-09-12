@@ -23,7 +23,7 @@ func Register(mux *http.ServeMux) {
 		}),
 	))
 
-	// Legacy Python-era health probe, kept for drop-in compatibility.
+	// Legacy health probe, kept for drop-in compatibility.
 	mux.Handle("GET /health", middleware.RoutePattern("GET /health")(
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			slog.DebugContext(r.Context(), "health")

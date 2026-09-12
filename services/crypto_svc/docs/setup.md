@@ -58,8 +58,7 @@ docker compose up --build   # from repo root; REST :8001, gRPC :50051
 ```
 
 Health: `GET /healthz` (liveness, open) and `GET /readyz` (readiness, open),
-plus a legacy `GET /health` kept for drop-in compatibility with the Python-era
-probe.
+plus a legacy `GET /health` probe kept for drop-in compatibility.
 
 ## Regenerate layers
 
