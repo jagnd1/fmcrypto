@@ -162,30 +162,6 @@ func rsaHash(algo Algo) crypto.Hash {
 	return 0
 }
 
-// Verify verifies a signature against a DER public key.
-func Verify(algo Algo, pkDER, data, sig []byte) (bool, error) {
-	pk, err := parsePK(pkDER)
-	if err != nil {
-		return false, err
-	}
-	switch k := pk.(type) {
-	case *rsa.PublicKey:
-		h, err := hashFor(algo)
-		if err != nil {
-			return false, err
-		}
-		h.Write(data)
-		return rsa.VerifyPKCS1v15(k, rsaHash(algo), h.Sum(nil), sig) == nil, nil
-	case *ecdsa.PublicKey:
-		d, err := digest(algo, data)
-		if err != nil {
-			return false, err
-		}
-		return ecdsa.VerifyASN1(k, d, sig), nil
-	}
-	return false, ErrInvalid{Msg: "unsupported public key type"}
-}
-
 // PkEncrypt RSA-encrypts data (PKCS#1 v1.5) under a DER public key.
 func PkEncrypt(pkDER, data []byte) ([]byte, error) {
 	pk, err := parsePK(pkDER)
@@ -199,23 +175,6 @@ func PkEncrypt(pkDER, data []byte) ([]byte, error) {
 	return rsa.EncryptPKCS1v15(rand.Reader, rsaPK, data)
 }
 
-// SkDecrypt RSA-decrypts data (PKCS#1 v1.5) with an LMK-wrapped private key.
-func SkDecrypt(algo Algo, lmk []byte, skLMK string, data []byte) ([]byte, error) {
-	skDER, err := UnwrapKey(algo, lmk, skLMK)
-	if err != nil {
-		return nil, err
-	}
-	sk, err := parseSK(skDER)
-	if err != nil {
-		return nil, err
-	}
-	rsaSK, ok := sk.(*rsa.PrivateKey)
-	if !ok {
-		return nil, ErrInvalid{Msg: "sk decrypt requires rsa key"}
-	}
-	return rsa.DecryptPKCS1v15(rand.Reader, rsaSK, data)
-}
-
 // ExpKey exports an LMK-wrapped symmetric key under an RSA public key, or
 // returns it untouched when pk is empty (standalone export).
 func ExpKey(algo Algo, lmk []byte, keyLMK, kcv []byte, pk []byte) ([]byte, error) {
@@ -227,19 +186,6 @@ func ExpKey(algo Algo, lmk []byte, keyLMK, kcv []byte, pk []byte) ([]byte, error
 		return nil, err
 	}
 	return PkEncrypt(pk, clearKey)
-}
-
-// ImpKey unwraps an RSA-encrypted symmetric key and re-wraps it under the LMK.
-func ImpKey(asymAlgo Algo, lmk []byte, skLMK string, symAlgo Algo, keyPK []byte) ([]byte, error) {
-	clearKey, err := SkDecrypt(asymAlgo, lmk, skLMK, keyPK)
-	if err != nil {
-		return nil, err
-	}
-	blob, err := WrapKey(symAlgo, lmk, clearKey, "")
-	if err != nil {
-		return nil, err
-	}
-	return []byte(blob), nil
 }
 
 // Ecdh derives a shared key. recvSK is the LMK-wrapped local EC private key,

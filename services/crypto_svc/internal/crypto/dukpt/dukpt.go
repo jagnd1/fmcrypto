@@ -30,11 +30,11 @@ import (
 type KeyType int
 
 const (
-	TwoTDEA  KeyType = 0
+	TwoTDEA   KeyType = 0
 	ThreeTDEA KeyType = 1
-	AES128   KeyType = 2
-	AES192   KeyType = 3
-	AES256   KeyType = 4
+	AES128    KeyType = 2
+	AES192    KeyType = 3
+	AES256    KeyType = 4
 )
 
 // KeyUsage enumerates the derived-key purposes (X9.24-3 §B.3.1).
@@ -56,8 +56,8 @@ const (
 type derivationPurpose int
 
 const (
-	purposeInitialKey   derivationPurpose = 0
-	purposeWorkingKey   derivationPurpose = 1
+	purposeInitialKey derivationPurpose = 0
+	purposeWorkingKey derivationPurpose = 1
 )
 
 // Deriver derives initial and transaction keys from a BDK.
@@ -144,14 +144,6 @@ func aesECBEncrypt(key, plaintext []byte) ([]byte, error) {
 	out := make([]byte, block.BlockSize())
 	block.Encrypt(out, plaintext)
 	return out, nil
-}
-
-func xor16(a, b []byte) []byte {
-	out := make([]byte, 16)
-	for i := 0; i < 16; i++ {
-		out[i] = a[i] ^ b[i]
-	}
-	return out
 }
 
 func intToBytes(x uint32) []byte {
