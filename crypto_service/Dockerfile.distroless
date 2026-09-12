@@ -1,5 +1,5 @@
 # Ultra-minimal distroless build for maximum security and minimal size
-FROM python:3.13-slim AS builder
+FROM python:3.14-slim AS builder
 
 # Install build dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -31,11 +31,13 @@ COPY common/ /app/common/
 COPY run.py /app/
 
 # Set environment variables
-ENV PATH=/app/.local/bin:$PATH
-ENV PYTHONPATH=/app
+ENV PATH=/app/.local/bin:$PATH \
+    PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONPATH=/app
 
 # Expose port
 EXPOSE 8001
 
 # Use exec form for better signal handling
-CMD ["uvicorn", "crypto_service.app.main:app", "--host", "0.0.0.0", "--port", "8001", "--workers", "1"]
+CMD ["uvicorn", "crypto_service.app.main:app", "--host", "0.0.0.0", "--port", "8001", "--workers", "1", "--h11-max-incomplete-event-size", "65536"]

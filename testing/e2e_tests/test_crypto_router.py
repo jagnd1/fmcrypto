@@ -1,6 +1,6 @@
 import asyncio
 from common.utils.crypto import Utils
-from pki_service.app.main import health_check
+from crypto_service.app.main import health_check
 import pytest
 import os
 from crypto_service.app.routers.v1.crypto import (
@@ -29,7 +29,7 @@ class TestCryptoRouter:
 
     async def _create_kp(self, algo: str, use_mode: str):
         kp_gen_req = KpGenReq(algo=algo, use_mode=use_mode)
-        result = await create_kp(kp_gen_req, self.crypto_usecase)
+        result = await create_kp(kp_gen_req, crypto_usecase=self.crypto_usecase)
         if result and result.status == "success":
             print(f"pk: {result.pk}")
             print(f"sk_lmk: {result.sk_lmk}")
@@ -53,7 +53,7 @@ class TestCryptoRouter:
 
     async def _gen_sign(self, algo: str, msg: str, sk_lmk: str):
         sign_req = SignReq(algo=algo, msg=msg, sk_lmk=sk_lmk)
-        result = await gen_sign(sign_req, self.crypto_usecase)
+        result = await gen_sign(sign_req, crypto_usecase=self.crypto_usecase)
         if result and result.status == "success":
             print(f"signature: {result.signature}")
             return result.signature
@@ -78,7 +78,7 @@ class TestCryptoRouter:
 
     async def _ecdh(self, eph_pk: str, algo: str, key_type: str, use_mode: str):
         ecdh_req = EcdhReq(eph_pk=eph_pk, algo=algo, key_type=key_type, use_mode=use_mode)
-        result = await ecdh(ecdh_req, self.crypto_usecase)
+        result = await ecdh(ecdh_req, crypto_usecase=self.crypto_usecase)
         if result and result.status == "success":
             print(f"derived_key: {result.derived_key}")
             print(f"kcv: {result.kcv}")
@@ -101,7 +101,7 @@ class TestCryptoRouter:
 
     async def _exp_key(self, key_lmk: str, kcv: str, pk: str):
         exp_key_req = ExpKeyReq(key_lmk=key_lmk, kcv=kcv, pk=pk)
-        result = await exp_key(exp_key_req, self.crypto_usecase)
+        result = await exp_key(exp_key_req, crypto_usecase=self.crypto_usecase)
         if result and result.status == "success":
             print(f"key_pk: {result.key_pk}")
             return result.key_pk
@@ -117,7 +117,7 @@ class TestCryptoRouter:
     
     async def _exp_tr31(self, key_lmk: str, zmk_lmk: str, iksn: str):
         exp_tr31_req = ExpTr31Req(key_lmk=key_lmk, zmk_lmk=zmk_lmk, iksn=iksn)
-        result = await exp_tr31(exp_tr31_req, self.crypto_usecase)
+        result = await exp_tr31(exp_tr31_req, crypto_usecase=self.crypto_usecase)
         if result and result.status == "success":
             print(f"key_zmk: {result.key_zmk}")
             return result.key_zmk
@@ -133,7 +133,7 @@ class TestCryptoRouter:
 
     async def _rand_gen(self, len: str):
         rand_gen_req = RandGenReq(len=len)
-        result = await rand_gen(rand_gen_req, self.crypto_usecase)
+        result = await rand_gen(rand_gen_req, crypto_usecase=self.crypto_usecase)
         if result and result.status == "success":
             print(f"rand no: {result.rand_no}")
             return result.rand_no
@@ -147,7 +147,7 @@ class TestCryptoRouter:
     async def _exp_tr34(self, kbpk: str, kdh_cert: str, krd_cert: str, kdh_sk_lmk: str, kcv: str):
         exp_tr34_req = ExpTr34Req(
             kbpk=kbpk, kdh_cert=kdh_cert, krd_cert=krd_cert, kdh_sk_lmk=kdh_sk_lmk, kcv=kcv)
-        result = await exp_tr34(exp_tr34_req, self.crypto_usecase)
+        result = await exp_tr34(exp_tr34_req, crypto_usecase=self.crypto_usecase)
         if result and result.status == "success":
             print(f"ed: {result.ed}")
             return result.aa, result.ed, result.signature
@@ -165,7 +165,7 @@ class TestCryptoRouter:
 
     async def _key_gen(self, key_type: str, use_mode: str, algo: str):
         key_gen_req = KeyGenReq(key_type=key_type, use_mode=use_mode, algo=algo)
-        result = await key_gen(key_gen_req, self.crypto_usecase)
+        result = await key_gen(key_gen_req, crypto_usecase=self.crypto_usecase)
         if result and result.status == "success":
             print(f"key_lmk: {result.key_lmk}")
             print(f"kcv: {result.kcv}")
@@ -184,7 +184,7 @@ class TestCryptoRouter:
     
     async def _kcv_gen(self, key_lmk: str):
         kcv_gen_req = KcvGenReq(key_lmk=key_lmk)
-        result = await kcv_gen(kcv_gen_req, self.crypto_usecase)
+        result = await kcv_gen(kcv_gen_req, crypto_usecase=self.crypto_usecase)
         if result and result.status == "success":
             print(f"kcv: {result.kcv}")
             return result.kcv
@@ -198,7 +198,7 @@ class TestCryptoRouter:
 
     async def _ipek_derive(self, bdk_lmk: str, iksn: str, algo: str, use_mode: str):
         ipek_derive_req = IpekDeriveReq(bdk_lmk=bdk_lmk, iksn=iksn, algo=algo, use_mode=use_mode)
-        result = await ipek_derive(ipek_derive_req, self.crypto_usecase)
+        result = await ipek_derive(ipek_derive_req, crypto_usecase=self.crypto_usecase)
         if result and result.status == "success":
             print(f"ipek_lmk: {result.ipek_lmk}")
             print(f"kcv: {result.kcv}")
@@ -219,7 +219,7 @@ class TestCryptoRouter:
     async def _data_encr(self, key_lmk: str, encr_mode: str, iv: str, msg: str, algo: str):
         data_encr_req = DataEncrReq(
             key_lmk=key_lmk, encr_mode=encr_mode, iv=iv, msg=msg, algo=algo)
-        result = await data_encr(data_encr_req, self.crypto_usecase)
+        result = await data_encr(data_encr_req, crypto_usecase=self.crypto_usecase)
         if result and result.status == "success":
             print(f"encr_msg: {result.encr_msg}")
             return result.encr_msg
@@ -238,7 +238,7 @@ class TestCryptoRouter:
     async def _data_decr(self, key_lmk: str, encr_mode: str, iv: str, encr_msg: str, algo: str):
         data_decr_req = DataDecrReq(
             key_lmk=key_lmk, encr_mode=encr_mode, iv=iv, encr_msg=encr_msg, algo=algo)
-        result = await data_decr(data_decr_req, self.crypto_usecase)
+        result = await data_decr(data_decr_req, crypto_usecase=self.crypto_usecase)
         if result and result.status == "success":
             print(f"msg: {result.msg}")
             return result.msg
@@ -256,7 +256,7 @@ class TestCryptoRouter:
     
     async def _mac(self, key_lmk: str, mac_mode: str, msg: str):
         mac_req = MacReq(key_lmk=key_lmk, mac_mode=mac_mode, msg=msg)
-        result = await mac(mac_req, self.crypto_usecase)
+        result = await mac(mac_req, crypto_usecase=self.crypto_usecase)
         if result and result.status == "success":
             print(f"mac_resp: {result.mac_resp}")
             return result.mac_resp
@@ -276,7 +276,7 @@ class TestCryptoRouter:
         self, key_lmk: str, src_pinblk: str, dest_key: str, ksn: str, pan: str):
         trans_pin_req = TransPinReq(
             key_lmk=key_lmk, src_pinblk=src_pinblk, dest_key=dest_key, ksn=ksn, pan=pan)
-        result = await trans_pin(trans_pin_req, self.crypto_usecase)
+        result = await trans_pin(trans_pin_req, crypto_usecase=self.crypto_usecase)
         if result and result.status == "success":
             print(f"dest_pinblk: {result.dest_pinblk}")
             return result.dest_pinblk
@@ -294,7 +294,7 @@ class TestCryptoRouter:
 
     async def _key_wrap(self, kbpk: str, key: str, algo: str):
         key_wrap_req = WrapReq(algo=algo, kbpk=kbpk, key=key)
-        result = await wrap(key_wrap_req, self.crypto_usecase)
+        result = await wrap(key_wrap_req, crypto_usecase=self.crypto_usecase)
         if result and result.status == "success":
             print(f"key_kbpk: {result.key_kbpk}")
             return result.key_kbpk
@@ -310,7 +310,7 @@ class TestCryptoRouter:
 
     async def _key_unwrap(self, key_kbpk: str, kbpk: str):
         key_unwrap_req = UnwrapReq(key_kbpk=key_kbpk, kbpk=kbpk)
-        result = await unwrap(key_unwrap_req, self.crypto_usecase)
+        result = await unwrap(key_unwrap_req, crypto_usecase=self.crypto_usecase)
         if result and result.status == "success":
             print(f"key: {result.key}")
             return result.key

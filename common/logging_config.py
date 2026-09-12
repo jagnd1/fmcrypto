@@ -12,9 +12,9 @@ def setup_logging():
     root_logger.addHandler(log_handler)
     root_logger.setLevel(logging.INFO)
 
-    file_handler = logging.FileHandler('service.log')
-    file_handler.setFormatter(formatter)
-    root_logger.addHandler(file_handler)
+    # file_handler = logging.FileHandler('service.log')
+    # file_handler.setFormatter(formatter)
+    # root_logger.addHandler(file_handler)
 
     logging.getLogger("uvicorn.access").addHandler(log_handler)
     logging.getLogger("uvicorn.error").addHandler(log_handler)

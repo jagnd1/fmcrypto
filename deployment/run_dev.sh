@@ -18,4 +18,3 @@ docker-compose up --build
 
 echo "development environment started successfully!"
 echo "crypto service: http://localhost:8001"
-echo "pki service: http://localhost:8000"

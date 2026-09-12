@@ -1,4 +1,3 @@
-from abc import ABC, abstractmethod
 from asn1crypto import x509 as asn1x509
 from datetime import datetime, timezone, timedelta
 
@@ -6,7 +5,7 @@ from common.utils.enum.algo import Algo
 from common.utils.crypto import Utils as NewUtils
 
 
-class CertRenew(ABC):
+class CertRenew:
 
     def __init__(self):
         print("abs cert renew: ")
@@ -41,11 +40,6 @@ class CertRenew(ABC):
             'subject_public_key_info': spki, 'extensions': extns,
         })
         return self.tbs_cert.dump()
-
-    @abstractmethod
-    def sign(self, message: bytes, issuer_sk: str, algo: Algo) -> bytes:
-        """ sign will be implemented in the child class """
-        pass
 
     def cert_build(self, signature: bytes, in_algo: Algo) -> bytes:
         const_sign_algo = NewUtils.get_sign_algo(in_algo)

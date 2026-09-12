@@ -3,7 +3,7 @@
 relative_files = True
 
 # Source directories to measure coverage for (relative to testing/ directory)
-source = ../crypto_service, ../pki_service, ../common
+source = ../crypto_service, ../common
 
 # Omit test files from coverage measurement
 omit = 

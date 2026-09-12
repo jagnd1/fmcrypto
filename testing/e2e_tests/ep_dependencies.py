@@ -4,7 +4,7 @@ from typing import Any, Dict
 
 hsm_name = os.getenv("CRYPTO_HSM", "GP")
 crypto_url = "http://localhost:8001"
-pki_url = "http://localhost:8000"
+pki_url = "http://localhost:8001"
 query_param = f"?hsm_name={hsm_name}"
 
 async def exchange(url: str, body: Dict[str, Any], method: str = "POST"):

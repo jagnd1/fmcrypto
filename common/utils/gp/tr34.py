@@ -92,7 +92,7 @@ class Tr34:
         s_attrs = cms.CMSAttributes([
             cms.CMSAttribute({
                 'type': cms.CMSAttributeType('content_type'),
-                'values': [cms.ContentType('enveloped_data')]
+                'values': [cms.ContentType('data')]   # MUST equal the eContentType (id-data) set in build_sd
             }),
             cms.CMSAttribute({
                 'type': cms.CMSAttributeType('message_digest'),
@@ -126,15 +126,23 @@ class Tr34:
         return si
 
     def build_sd(self, digest_algo: str, ed_obj: cms.EnvelopedData, signer_cert_der: bytes, signer_sk: bytes):
-        hash_ed = NewUtils.hash(Algo.R2K, ed_obj.dump())
+        # Standard CMS: the encapsulated content is a [0] EXPLICIT OCTET STRING (id-data) carrying
+        # the EnvelopedData. The device does `new CMSEnvelopedData(getSignedContent().getContent())`,
+        # and BouncyCastle's CMSEnvelopedData parses a full CMS ContentInfo — so the eContent must
+        # carry the EnvelopedData wrapped in a ContentInfo(id-envelopedData), NOT the bare
+        # EnvelopedData (bare fails on-device with "Malformed content"). A verifier digests the OCTET
+        # STRING's VALUE, so serialize that ContentInfo ONCE and use those exact bytes for both the
+        # eContent and the messageDigest, or the signature is rejected as a digest mismatch.
+        ed_der = cms.ContentInfo({'content_type': "enveloped_data", 'content': ed_obj}).dump()
+        hash_ed = NewUtils.hash(Algo.R2K, ed_der)
         return cms.ContentInfo({
             'content_type': "signed_data",
             'content': cms.SignedData({
                 'version': "v1",
                 'digest_algorithms': [cms.DigestAlgorithm({'algorithm': algos.DigestAlgorithmId(digest_algo)})],
                 'encap_content_info': cms.ContentInfo({
-                    'content_type': "enveloped_data",
-                     'content': ed_obj
+                    'content_type': "data",
+                    'content': ed_der
                 }),
                 'signer_infos': [self._build_si(signer_cert_der, signer_sk, digest_algo, hash_ed)]
             })

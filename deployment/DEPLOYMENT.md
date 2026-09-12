@@ -19,8 +19,8 @@ cd deployment
 ## Docker Images
 
 ### Available Images
-- `python:3.13-slim` - Standard Debian-based image (~121 MB)
-- `python:3.13-alpine` - Alpine-based image (~56.5 MB)
+- `python:3.14-slim` - Standard Debian-based image (~121 MB)
+- `python:3.14-alpine` - Alpine-based image (~56.5 MB)
 - `distroless/python3` - Google distroless image (~50-60 MB)
 
 ## Configuration

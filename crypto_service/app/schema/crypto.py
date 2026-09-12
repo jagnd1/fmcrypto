@@ -1,6 +1,7 @@
 from enum import Enum
 from typing import Optional
 from pydantic import BaseModel
+from common.schema import KeyType
 
 class UseMode(str, Enum):
     DERIV = "DERIV"
@@ -14,17 +15,16 @@ class UseMode(str, Enum):
     SIGN = "SIGN"
 
 class Algo(str, Enum):
-    R2K = "R2K"
-    R3K = "R3K"
-    R4K = "R4K"
-    ECP256 = "ECP256"
-    ECP384 = "ECP384"
-    ECP512 = "ECP512"
-    ECP521 = "ECP521"
     A128 = "A128"
     A192 = "A192"
     A256 = "A256"
     TDES = "TDES"
+    ECP256 = "ECP256"
+    ECP384 = "ECP384"
+    ECP521 = "ECP521"
+    R2K = "R2K"
+    R3K = "R3K"
+    R4K = "R4K"
 
 class KpGenReq(BaseModel):
     algo: Algo
@@ -47,20 +47,7 @@ class SignResp(BaseModel):
     signature: Optional[str] = None
     class Config:
         from_attributes = True
-    
 
-class KeyType(str, Enum):
-    ZPK = "ZPK"
-    PVK = "PVK"
-    CVK = "CVK"
-    MKAC = "MKAC"
-    BDK = "BDK"
-    ZMK = "ZMK"
-    TMK = "TMK"
-    TEK = "TEK"
-    DEK = "DEK"
-    PEK = "PEK"
-    MEK = "MEK"
 
 class EcdhReq(BaseModel):
     eph_pk: str
