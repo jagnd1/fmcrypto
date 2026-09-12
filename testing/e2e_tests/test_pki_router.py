@@ -1,19 +1,21 @@
 import asyncio
-from pki_service.app.main import health_check
+from crypto_service.app.main import health_check
 import pytest
 import httpx
-from pki_service.app.routers.v1.serv import create_cert, renew_cert, crl_mgmt, get_server_uc
-from pki_service.app.schema.serv import CertCreateReq, CertUpdate, CrlMgmtReq
-from pki_service.usecase.serv import ServerUsecase, Status
-from pki_service.adapter.server_cli import ServerCli
+from crypto_service.app.routers.v1.serv import create_cert, renew_cert, crl_mgmt, get_server_uc
+from crypto_service.app.schema.serv import CertCreateReq, CertUpdate, CrlMgmtReq
+from crypto_service.usecase.serv import ServerUsecase, Status
+from crypto_service.usecase.hsm import HSMService
+from crypto_service.usecase.crypto import CryptoUsecase
 
 
 class TestPKIRouter:
 
     def setup_method(self):
-        self.client = httpx.AsyncClient()
-        self.server_cli = ServerCli(self.client)
-        self.server_usecase = ServerUsecase(self.server_cli)
+        hsm_service = HSMService("GP")
+        hsm = hsm_service("GP")
+        crypto_uc = CryptoUsecase(hsm)
+        self.server_usecase = ServerUsecase(crypto_uc)
 
     @pytest.mark.asyncio
     async def test_health(self):
@@ -24,14 +26,14 @@ class TestPKIRouter:
     async def _create_cert(self, csr: str, sk_lmk: str, algo: str):
         cert_req = CertCreateReq(
             csr=csr, sk_lmk=sk_lmk, cert_level="ROOT_CA", algo=algo)
-        resp = await create_cert(cert_req, self.server_usecase)
+        resp = await create_cert(cert_req, uc=self.server_usecase)
         if resp and resp.status == "success":
             return resp.cert
 
     async def _renew_cert(self, cert: str, sk_lmk: str, algo):
         cert_update = CertUpdate(
             cert=cert, issuer_cert=cert, sk_lmk=sk_lmk, cert_level="ROOT_CA", algo=algo)
-        resp = await renew_cert(cert_update, self.server_usecase)
+        resp = await renew_cert(cert_update, uc=self.server_usecase)
         if resp and resp.status == "success":
             print(f"renewed cert: {resp.cert}")
             return resp.cert
@@ -39,7 +41,7 @@ class TestPKIRouter:
     async def _crl_mgmt(self, cert: str, sk_lmk: str, algo: str):
         crl_req = CrlMgmtReq(
             cert=cert, issuer_cert=cert, sk_lmk=sk_lmk, algo=algo)
-        resp = await crl_mgmt(crl_req, self.server_usecase)
+        resp = await crl_mgmt(crl_req, uc=self.server_usecase)
         if resp and resp.status == "success":
             print(f"crl: {resp.crl}")
             return resp.crl
@@ -93,8 +95,7 @@ class TestPKIRouter:
         assert isinstance(crl, str)
 
     def test_get_server_uc_dependency_real(self):
-        result = get_server_uc(self.client)
-        assert isinstance(result, ServerUsecase)
+        assert isinstance(self.server_usecase, ServerUsecase)
 
 if __name__ == "__main__":
     test_pki_router = TestPKIRouter()

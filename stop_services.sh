@@ -1,5 +1,5 @@
 #!/bin/bash
-# stop both services
+# stop the crypto service
 # companion script to start_services.sh
 
 echo "stopping fmcrypto services..."
@@ -16,24 +16,9 @@ else
     echo "crypto service not found or already stopped"
 fi
 
-# stop pki service
-if [ -f pki.pid ]; then
-    pki_pid=$(cat pki.pid)
-    if kill -0 $pki_pid 2>/dev/null; then
-        kill $pki_pid
-        echo "stopped pki service (pid: $pki_pid)"
-    fi
-    rm pki.pid
-else
-    echo "pki service not found or already stopped"
-fi
-
 # clean up log files if they exist
 if [ -f crypto.log ]; then
     rm crypto.log
-fi
-if [ -f pki.log ]; then
-    rm pki.log
 fi
 
 echo "all services stopped and cleaned up"

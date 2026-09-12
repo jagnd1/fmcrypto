@@ -8,10 +8,10 @@ a cryptographic and pki service built with FastAPI for secure key management, en
 
 ## overview
 
-fmcrypto service provides two main services:
+fmcrypto service provides:
 
 - **crypto service** : key generation, encryption, digital signatures, mac operations, pin translation, and key wrapping
-- **pki service** : certificate generation, renewal, csr processing, and crl management
+- **pki service (merged)** : certificate generation, renewal, csr processing, and crl management — exposed under the crypto service at `/v1/serv`
 
 ## quick start
 
@@ -35,7 +35,7 @@ cd testing
 
 ## requirements
 
-- python 3.13+
+- python 3.14+
 - docker and docker compose
 - pytest and pytest-cov
 

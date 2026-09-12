@@ -337,7 +337,23 @@ class Utils():
         return urlsafe_b64encode(data)
 
     @staticmethod
-    def urlsafe_b64decode(data: bytes) -> bytes:
+    def urlsafe_b64decode(data) -> bytes:
+        # tolerate missing base64url padding — Android clients encode with NO_PADDING, so a bare
+        # urlsafe_b64decode raised "Incorrect padding" and crashed /rand_ts (500) AFTER it had
+        # already stored the anti-replay nonce, orphaning it → every next attestation mismatched.
+        # The pad count is derivable from length, so this stays correct for already-padded input.
+        if isinstance(data, str):
+            data = data.encode('ascii')
+        data += b'=' * (-len(data) % 4)
+        return urlsafe_b64decode(data)
+
+    @staticmethod
+    def urlsafe_b64decode_ex(data: bytes) -> bytes:
+        if isinstance(data, str):
+            data = data.encode('ascii')
+        pad = 4 - len(data) % 4
+        if pad != 4:
+            data = data + b'=' * pad
         return urlsafe_b64decode(data)
 
     @staticmethod

@@ -1,4 +1,3 @@
-from abc import ABC, abstractmethod
 from asn1crypto import crl, x509 as asn1x509
 from datetime import datetime, timedelta, timezone
 
@@ -6,7 +5,7 @@ from common.utils.enum.algo import Algo
 from common.utils.crypto import Utils as NewUtils
 
 
-class CrlMgmt(ABC):
+class CrlMgmt:
     
     def __init__(self):
         print("abs crl mgmt: ")
@@ -69,11 +68,6 @@ class CrlMgmt(ABC):
         self.tbs_cert_list = tbs_cert_list
         return tbs_cert_list.dump()
     
-    @abstractmethod
-    def sign(self, message: bytes, issuer_sk: str, algo: Algo) -> bytes:
-        """ sign will be implemented in the child class """
-        pass
-
     def build_cert_list(self) -> bytes:
         crl_obj = crl.CertificateList({
             'tbs_cert_list': self.tbs_cert_list,

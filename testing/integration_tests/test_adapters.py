@@ -1,9 +1,9 @@
 
-import asyncio
+import httpx
 import os
+import psec
 import pytest
 
-from common.utils.enum import encr_mode
 from crypto_service.adapter.gp.data_decr import DataDecr
 from crypto_service.adapter.gp.data_encr import DataEncr
 from crypto_service.adapter.gp.exp_key import ExpKey
@@ -18,10 +18,8 @@ from crypto_service.adapter.gp.rand_gen import RandGen
 from crypto_service.adapter.gp.unwrap_key import UnwrapKey
 from crypto_service.adapter.gp.wrap_key import WrapKey
 from crypto_service.app.schema.crypto import MacMode
-import httpx
 from common.utils.crypto import Utils
 from crypto_service.app.utils.enum.key_type import KeyType
-import psec
 from common.utils.enum.algo import Algo
 from common.utils.enum.encr_mode import EncrMode
 from common.utils.gp.asym_key import AsymKey
@@ -32,9 +30,7 @@ from common.utils.sw.tr31 import Tr31
 from crypto_service.adapter.gp.ecdh import Ecdh
 from crypto_service.adapter.gp.trans_pin import TransPin
 from crypto_service.app.utils.enum.use_mode import UseMode
-from pki_service.adapter.crl_mgmt import CrlMgmt
-from pki_service.adapter.csr_gen import csr_gen
-from pki_service.adapter.server_cli import ServerCli
+from crypto_service.adapter.pki.crl_mgmt import CrlMgmt
 
 
 def test_data_decr():
@@ -256,11 +252,26 @@ def test_pinblk_iso4():
 
 @pytest.mark.asyncio
 async def test_csr_gen():
-    rootca_sub = {
-        'country': 'IN', 'state': 'KA', 'locale': 'BLR', 'org': 'FM', 'cn': 'Root-CA',}
-    cli = httpx.AsyncClient(timeout=None)
-    server_cli = ServerCli(cli)
-    await csr_gen(server_cli, "ECP521", rootca_sub)
+    from common.adapter.csr_gen import CsrGen
+    from common.utils.crypto import Utils as NewUtils
+    from crypto_service.app.schema.crypto import KpGenReq, SignReq, UseMode
+    from crypto_service.usecase.hsm import HSMService
+    from crypto_service.usecase.crypto import CryptoUsecase
+
+    rootca_sub = {'country': 'IN', 'state': 'KA', 'locale': 'BLR', 'org': 'FM', 'cn': 'Root-CA'}
+    hsm_service = HSMService("GP")
+    hsm = hsm_service("GP")
+    crypto_uc = CryptoUsecase(hsm)
+
+    gen = CsrGen()
+    algo = Algo.ECP521
+    kp_resp = await crypto_uc.create_kp(KpGenReq(algo=Algo.get_algo_str(algo), use_mode=UseMode.SIGN))
+    gen.pk_obj = NewUtils.deserialize_pk(NewUtils.urlsafe_b64decode(kp_resp.pk))
+    tbs = gen.cert_req_info_build(rootca_sub, algo)
+    sig_resp = await crypto_uc.gen_sign(SignReq(msg=tbs.hex(), sk_lmk=kp_resp.sk_lmk, algo=Algo.get_algo_str(algo)))
+    gen.sign_data = bytes.fromhex(sig_resp.signature)
+    csr_data = gen.cert_req_build(algo)
+    assert len(csr_data) > 0
     
 
 def test_asym_key():

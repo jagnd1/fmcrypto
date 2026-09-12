@@ -1,10 +1,9 @@
-from abc import ABC, abstractmethod
 from asn1crypto import csr, keys, core
 
 from common.utils.enum.algo import Algo
 from common.utils.crypto import Utils as NewUtils
 
-class CsrGen(ABC):
+class CsrGen:
 
     def __init__(self):
         print("abs csr gen: ")
@@ -14,11 +13,6 @@ class CsrGen(ABC):
         self.sign_data = None
         self.cert_req = None
     
-    @abstractmethod
-    def sign(self, data: bytes, in_algo: Algo) -> bytes:
-        """ sign will be implemented in the child class """
-        pass
-
     def cert_req_info_build(self, sub: dict[str, str], in_algo: Algo) -> bytes:
 
         if in_algo in {Algo.ECP256, Algo.ECP384, Algo.ECP521}:
@@ -63,4 +57,3 @@ class CsrGen(ABC):
             'signature': core.OctetBitString(self.sign_data)})
         self.csr = self.cert_req.dump()
         return self.csr
-

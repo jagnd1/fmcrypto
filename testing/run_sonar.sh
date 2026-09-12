@@ -48,14 +48,14 @@ echo "running sonarqube analysis..."
 sonar-scanner \
     -Dsonar.host.url=http://localhost:9000 \
     -Dsonar.projectKey=fmcrypto \
-    -Dsonar.sources=crypto_service,pki_service,common \
+    -Dsonar.sources=crypto_service,common \
     -Dsonar.tests=testing \
     -Dsonar.exclusions="**/test_*.py,**/tests/**,**/*_test.py,**/test.py,**/Dockerfile*,**/docker-compose*.yml,**/.dockerignore,**/requirements.txt,**/healthcheck.sh,**/DEPLOYMENT.md,**/README.md,**/run.py,**/.venv/**,**/__pycache__/**" \
     -Dsonar.python.coverage.reportPaths=testing/coverage.xml \
     -Dsonar.python.xunit.reportPath=testing/test-results.xml \
     -Dsonar.coverage.exclusions="**/test_*.py,**/tests/**,**/*_test.py,**/test.py" \
     -Dsonar.sourceEncoding=UTF-8 \
-    -Dsonar.python.version=3.13
+    -Dsonar.python.version=3.14
 
 echo "sonarqube analysis completed!"
 echo "view results at: http://localhost:9000/dashboard?id=fmcrypto"

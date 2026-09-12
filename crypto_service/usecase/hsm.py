@@ -12,5 +12,5 @@ class HSMService:
         if hsm_name == "GP":
             return GPHSM()
         else:
-            raise NotImplementedError("invalid hsm name")
+            raise ValueError("invalid hsm name")
 

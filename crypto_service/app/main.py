@@ -11,6 +11,7 @@ from common.middlewares.reqid_exception import http_exception_handler
 from common.middlewares.reqid_exception import ReqIDExceptionMiddleware
 from crypto_service.usecase.hsm import HSMService
 from .routers.v1 import crypto as crypto_v1
+from .routers.v1 import serv as serv_v1
 
 setup_logging()
 logger = logging.getLogger(__name__)
@@ -49,6 +50,7 @@ app.add_middleware(
 app.add_middleware(ReqIDExceptionMiddleware)
 app.add_exception_handler(StarletteHTTPException, http_exception_handler)
 app.include_router(crypto_v1.router, prefix="/v1/crypto", tags=["crypto"])
+app.include_router(serv_v1.router, prefix="/v1/serv", tags=["server"])
 
 @app.get("/health", status_code=200)
 async def health_check():

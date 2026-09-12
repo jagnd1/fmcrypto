@@ -23,5 +23,4 @@ docker-compose -f docker-compose.prod.yml up --build -d
 
 echo "production environment started successfully!"
 echo "crypto service: http://localhost:8001"
-echo "pki service: http://localhost:8000"
 echo "use 'docker-compose -f docker-compose.prod.yml logs -f' to view logs"

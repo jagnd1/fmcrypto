@@ -1,4 +1,3 @@
-from abc import ABC, abstractmethod
 from typing import Any
 from asn1crypto import keys as asn1keys, x509 as asn1x509, csr
 from Crypto.PublicKey import ECC, RSA
@@ -10,7 +9,7 @@ from common.utils.enum.cert_level import CertLevel
 from common.utils.crypto import Utils as NewUtils
 
 
-class CertGen(ABC):
+class CertGen:
     def __init__(self):
         print("abs cert gen: ")
         self.tbs_cert: asn1x509.TbsCertificate = None
@@ -52,7 +51,7 @@ class CertGen(ABC):
         # convert x500name to x509.Name
         subject_name = self.csr_obj["certification_request_info"]["subject"]
         # construct issuer_sub_name from issuer cert
-        if in_cert_level != CertLevel.ROOT_CA:
+        if in_cert_level != CertLevel.ROOT_CA and in_issuer_cert:
             issuer_sub = NewUtils.load_cert_der(bytes.fromhex(in_issuer_cert)).subject
             issuer_name = self._get_sub_name(issuer_sub)
             signing_algo = NewUtils.extract_sign_algo(bytes.fromhex(in_issuer_cert))
@@ -132,11 +131,6 @@ class CertGen(ABC):
             'subject_public_key_info': sub_pk_info, 'extensions': extn_list,
         })
         return self.tbs_cert.dump()
-
-    @abstractmethod
-    def sign(self, message: bytes, issuer_sk: str, algo: Algo) -> bytes:
-        """ sign will be implemented in the child class """
-        pass
 
     def cert_build(self, signature: bytes, in_algo: Algo) -> bytes:
         const_sign_algo = NewUtils.get_sign_algo(in_algo)

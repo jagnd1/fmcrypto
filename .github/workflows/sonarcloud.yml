@@ -19,7 +19,7 @@ jobs:
       - name: set up python
         uses: actions/setup-python@v4
         with:
-          python-version: '3.13'
+          python-version: '3.14'
           
       - name: cache pip dependencies
         uses: actions/cache@v3
@@ -37,7 +37,6 @@ jobs:
           python -m pip install --upgrade pip
           pip install pytest pytest-cov pytest-asyncio httpx
           pip install -r ../crypto_service/requirements.txt
-          pip install -r ../pki_service/requirements.txt
           
       - name: start crypto service
         run: |
@@ -51,45 +50,23 @@ jobs:
           export PYTHONPATH="../:$PYTHONPATH"
           nohup uvicorn app.main:app --host 0.0.0.0 --port 8001 > crypto.log 2>&1 &
           echo $! > crypto.pid
-        
-      - name: start pki service  
-        run: |
-          cd pki_service
-          python -m pip install -r requirements.txt
-          # set env vars for CI environment
-          export KC_CLI="pki-ci"
-          export ENVIRONMENT="test"
-          export PYTHONPATH="../:$PYTHONPATH"
-          nohup uvicorn app.main:app --host 0.0.0.0 --port 8000 > pki.log 2>&1 &
-          echo $! > pki.pid
           
-      - name: wait for services to start
+      - name: wait for the service to start
         run: |
-          # give services time to start
+          # give the service time to start
           sleep 10
           
-          # check if services are running
+          # check if the service is running
           echo "Checking crypto service status..."
           if ! ps aux | grep -v grep | grep "crypto_service"; then
             echo "Crypto service not running, checking logs:"
             cat crypto_service/crypto.log || echo "No crypto log found"
           fi
           
-          echo "Checking pki service status..."
-          if ! ps aux | grep -v grep | grep "pki_service"; then
-            echo "PKI service not running, checking logs:"
-            cat pki_service/pki.log || echo "No pki log found"
-          fi
-          
           # wait for crypto service with extended timeout
           echo "Waiting for crypto service health check..."
           timeout 60s bash -c 'until curl -f http://localhost:8001/health > /dev/null 2>&1; do sleep 3; done'
           echo "crypto service is ready"
-          
-          # wait for pki service with extended timeout
-          echo "Waiting for pki service health check..."
-          timeout 60s bash -c 'until curl -f http://localhost:8000/health > /dev/null 2>&1; do sleep 3; done'
-          echo "pki service is ready"
           
       - name: run tests with coverage
         run: |
@@ -101,15 +78,12 @@ jobs:
           export CRYPTO_HOST="localhost"
           export CRYPTO_PORT="8001"
           export ENVIRONMENT="test"
-          export PKI_HOST="localhost"
-          export PKI_PORT="8000"
           export PROTOCOL="http"
           export PYTHONPATH="../:$PYTHONPATH"
           
           # Generate coverage for SonarCloud (using simple format)
           pytest unit_tests/ integration_tests/ e2e_tests/ \
             --cov=../crypto_service \
-            --cov=../pki_service \
             --cov=../common \
             --cov-report=term-missing \
             --junitxml=test-results.xml \
@@ -117,7 +91,7 @@ jobs:
           
           # Generate SonarCloud-compatible coverage using coverage.py directly
           cd ..
-          coverage run --source=crypto_service,pki_service,common -m pytest testing/unit_tests/ testing/integration_tests/ testing/e2e_tests/ -q
+          coverage run --source=crypto_service,common -m pytest testing/unit_tests/ testing/integration_tests/ testing/e2e_tests/ -q
           coverage xml -o testing/coverage.xml
           cd testing
           
@@ -140,12 +114,6 @@ jobs:
             kill $(cat crypto_service/crypto.pid) || true
             rm crypto_service/crypto.pid
           fi
-          
-          # stop pki service if running  
-          if [ -f pki_service/pki.pid ]; then
-            kill $(cat pki_service/pki.pid) || true
-            rm pki_service/pki.pid
-          fi
 
       - name: verify coverage files and debug paths
         run: |
@@ -166,7 +134,6 @@ jobs:
           
           echo "=== Current working directory structure ==="
           find . -name "*.py" -path "./crypto_service/*" | head -3
-          find . -name "*.py" -path "./pki_service/*" | head -3
           find . -name "*.py" -path "./common/*" | head -3
             
       - name: sonarcloud scan

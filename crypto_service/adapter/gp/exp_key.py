@@ -11,11 +11,12 @@ class ExpKey(BaseExpKey):
         self.asym_key_obj = AsymKey()
 
     def build(self, key: bytes, kcv: bytes, pk: bytes) -> bytes:
-        # T O D O: 1. no way to prevent usage of EC keys, no Encr or Wrapping support for EC keys, 
-        # only RSA so dynamically determine key len for RSA
-        # 2. kcv not used
-        # 3. sym key considered as A128, make this dynamic
-        self.key_pk = self.asym_key_obj.exp_key(Algo.R2K, pk, Algo.A128, key)
+        if pk:
+            # symmetric key export wrapped under target public key
+            self.key_pk = self.asym_key_obj.exp_key(Algo.R2K, pk, Algo.A128, key)
+        else:
+            # standalone export — return key in LMK format without wrapping
+            self.key_pk = key
         return self.key_pk
 
     def parse(self, resp: bytes):

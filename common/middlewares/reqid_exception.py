@@ -13,6 +13,18 @@ class BusinessLogicException(Exception):
     def __init__(self, detail: str):
         self.detail = detail
 
+class UnAuthException(Exception):
+    """ custom exception for authentication failure """
+    status_code = 401
+    def __init__(self, detail: str = "authentication required"):
+        self.detail = detail
+
+class ForbiddenException(Exception):
+    """ custom exception for authorization failure """
+    status_code = 403
+    def __init__(self, detail: str = "access denied"):
+        self.detail = detail
+
 class AdapterException(Exception):
     """ custom exception for adpater level """
     def __init__(self, detail: str):
@@ -54,7 +66,13 @@ class ReqIDExceptionMiddleware:
         # exception processing
         except Exception as e:
             # handle different exceptions
-            if isinstance(e, BusinessLogicException):
+            if isinstance(e, UnAuthException):
+                response = JSONResponse(
+                    status_code=e.status_code, content={"status": "error", "detail": str(e.detail)})
+            elif isinstance(e, ForbiddenException):
+                response = JSONResponse(
+                    status_code=e.status_code, content={"status": "error", "detail": str(e.detail)})
+            elif isinstance(e, BusinessLogicException):
                 response = JSONResponse(
                     status_code=400, content={"status": "error", "detail": str(e.detail)})
             elif isinstance(e, AdapterException):

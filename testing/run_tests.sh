@@ -23,7 +23,6 @@ pip install pytest pytest-cov pytest-asyncio httpx
 
 # install project dependencies
 pip install -r ../crypto_service/requirements.txt
-pip install -r ../pki_service/requirements.txt
 
 # set environment variables for testing
 export HSM_IP="localhost"
@@ -32,8 +31,6 @@ export CRYPTO_HSM="GP"
 export CRYPTO_HOST="localhost"
 export CRYPTO_PORT="8001"
 export ENVIRONMENT="test"
-export PKI_HOST="localhost"
-export PKI_PORT="8000"
 export PROTOCOL="http"
 
 # add parent directory to python path for imports
