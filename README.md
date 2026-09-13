@@ -54,7 +54,7 @@ docker compose up --build             # containerized, from repo root
 
 The service is headless (service-to-service): auth is API-key based. Set
 `API_KEYS` to require keys on REST; gRPC always requires a key. See
-[`services/crypto_svc/docs/setup.md`](services/crypto_svc/docs/setup.md).
+[`docs/setup.md`](docs/setup.md).
 
 ## testing
 
@@ -62,7 +62,7 @@ The service is headless (service-to-service): auth is API-key based. Set
 cd services/crypto_svc && make test    # go test ./...
 ```
 
-See [`services/crypto_svc/docs/testing.md`](services/crypto_svc/docs/testing.md).
+See [`docs/testing.md`](docs/testing.md).
 
 ## license
 
