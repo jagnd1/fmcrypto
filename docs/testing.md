@@ -42,4 +42,4 @@ grpcurl -plaintext -H "authorization: Bearer crypto_<key>" \
   localhost:50051 crypto.v1.CryptoService/RandGen
 ```
 
-Full auth + API-key setup is in [`docs/auth.md`](auth.md).
+Full auth + API-key setup is in [`auth.md`](auth.md).

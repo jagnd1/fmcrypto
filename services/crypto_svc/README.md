@@ -65,7 +65,7 @@ The service is headless (service-to-service): auth is **API-key based**.
 - **gRPC**: API key always required (strict, via the `APIKeyInterceptor`).
 
 API keys are stateless: sha256 hashes configured via `API_KEYS` (env). See
-`.env.example` and `docs/`.
+`.env.example` and the root [`docs/`](../../docs).
 
 ## Build & run
 
