@@ -5,8 +5,12 @@ The crypto service is a headless service (no browser clients, no IdP). Auth is
 
 | Transport | Auth | When enforced |
 |---|---|---|
-| REST | API key (`X-API-Key: crypto_<hex>` or `Authorization: Bearer crypto_<hex>`) | when `API_KEYS` is configured; otherwise open (`PermitAll`) |
-| gRPC | API key (`authorization: Bearer crypto_<hex>` metadata) | always (strict, via `APIKeyInterceptor`) |
+| REST | API key (`X-API-Key: crypto_<hex>` or `Authorization: Bearer crypto_<hex>`) | required unless explicit local insecure mode is enabled |
+| gRPC | API key (`authorization: Bearer crypto_<hex>` metadata) | same policy as REST |
+
+Startup fails when `API_KEYS` is empty unless `ALLOW_INSECURE_AUTH=true` is
+explicitly set. Production rejects that override. Local insecure mode supplies
+an admin development identity consistently to both transports.
 
 ## API keys (stateless)
 
@@ -33,3 +37,10 @@ role names. Wildcard `resource:*` matches all actions on a resource.
 | `admin` | `crypto:*`, `serv:*` |
 | `operator` | `crypto:gen_sign`, `crypto:key_gen`, `crypto:kcv_gen`, `crypto:data_encr`, `crypto:data_decr`, `crypto:mac`, `crypto:rand_gen` |
 | `reader` | `crypto:rand_gen` |
+| `key_custodian` | `internal:unwrap` |
+
+`unwrap` is not covered by the `admin` role's `crypto:*` wildcard. Its REST
+route is absent and its gRPC method is disabled unless
+`ENABLE_INTERNAL_UNWRAP=true`. Enabling it also requires configured API keys.
+Calls are audited by operation and outcome only; request and response material
+is never included in those audit records.

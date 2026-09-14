@@ -3,6 +3,7 @@ package handlers
 
 import (
 	"context"
+	"log/slog"
 	"net/http"
 
 	"common/httpx"
@@ -319,9 +320,10 @@ func (s *Server) Wrap(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) Unwrap(w http.ResponseWriter, r *http.Request) {
-	if !s.authorize(w, r, "crypto:unwrap") {
+	if !s.authorize(w, r, "internal:unwrap") {
 		return
 	}
+	slog.InfoContext(r.Context(), "internal crypto command", "operation", "unwrap", "phase", "start")
 	var req dto.UnwrapReq
 	if err := httpx.DecodeJSON(r, &req); err != nil {
 		respond.Err(w, r, err)
@@ -329,8 +331,10 @@ func (s *Server) Unwrap(w http.ResponseWriter, r *http.Request) {
 	}
 	resp, err := s.crypto.Unwrap(r.Context(), req)
 	if err != nil {
+		slog.WarnContext(r.Context(), "internal crypto command", "operation", "unwrap", "phase", "failed")
 		respond.Err(w, r, err)
 		return
 	}
+	slog.InfoContext(r.Context(), "internal crypto command", "operation", "unwrap", "phase", "complete")
 	httpx.WriteJSON(w, http.StatusOK, resp)
 }

@@ -12,8 +12,16 @@ func testLookup(env map[string]string) func(string) (string, bool) {
 	}
 }
 
+func validEnv(overrides map[string]string) map[string]string {
+	env := map[string]string{"ALLOW_INSECURE_AUTH": "true"}
+	for key, value := range overrides {
+		env[key] = value
+	}
+	return env
+}
+
 func TestDefaults(t *testing.T) {
-	cfg, err := Load(nil, testLookup(map[string]string{}))
+	cfg, err := Load(nil, testLookup(validEnv(nil)))
 	if err != nil {
 		t.Fatalf("load: %v", err)
 	}
@@ -26,18 +34,18 @@ func TestDefaults(t *testing.T) {
 	if cfg.APIKeyPrefix != "crypto_" {
 		t.Errorf("prefix = %q, want crypto_", cfg.APIKeyPrefix)
 	}
-	if cfg.AuthEnabled() {
-		t.Error("auth should be disabled by default")
+	if !cfg.AllowInsecureAuth {
+		t.Error("test setup should explicitly allow insecure auth")
 	}
 }
 
 func TestEnvOverrides(t *testing.T) {
-	cfg, err := Load(nil, testLookup(map[string]string{
-		"PORT":         "9999",
-		"GRPC_PORT":    "50052",
+	cfg, err := Load(nil, testLookup(validEnv(map[string]string{
+		"PORT":           "9999",
+		"GRPC_PORT":      "50052",
 		"API_KEY_PREFIX": "fmcrypto_",
-		"API_KEYS":     "abc123, def456",
-	}))
+		"API_KEYS":       "abc123, def456",
+	})))
 	if err != nil {
 		t.Fatalf("load: %v", err)
 	}
@@ -53,7 +61,7 @@ func TestEnvOverrides(t *testing.T) {
 }
 
 func TestFlagOverridesEnv(t *testing.T) {
-	cfg, err := Load([]string{"-port", "7777"}, testLookup(map[string]string{"PORT": "9999"}))
+	cfg, err := Load([]string{"-port", "7777"}, testLookup(validEnv(map[string]string{"PORT": "9999"})))
 	if err != nil {
 		t.Fatalf("load: %v", err)
 	}
@@ -63,26 +71,26 @@ func TestFlagOverridesEnv(t *testing.T) {
 }
 
 func TestInvalidPort(t *testing.T) {
-	if _, err := Load([]string{"-port", "0"}, testLookup(map[string]string{})); err == nil {
+	if _, err := Load([]string{"-port", "0"}, testLookup(validEnv(nil))); err == nil {
 		t.Fatal("want error for port 0")
 	}
-	if _, err := Load([]string{"-port", "70000"}, testLookup(map[string]string{})); err == nil {
+	if _, err := Load([]string{"-port", "70000"}, testLookup(validEnv(nil))); err == nil {
 		t.Fatal("want error for port 70000")
 	}
 }
 
 func TestBadDuration(t *testing.T) {
-	if _, err := Load([]string{"-read-timeout", "abc"}, testLookup(map[string]string{})); err == nil {
+	if _, err := Load([]string{"-read-timeout", "abc"}, testLookup(validEnv(nil))); err == nil {
 		t.Fatal("want error for malformed duration")
 	}
-	if _, err := Load([]string{"-read-timeout", "0s"}, testLookup(map[string]string{})); err == nil {
+	if _, err := Load([]string{"-read-timeout", "0s"}, testLookup(validEnv(nil))); err == nil {
 		t.Fatal("want error for zero duration")
 	}
 }
 
 func TestZeroValueEnv(t *testing.T) {
 	// empty-string env must fall back to defaults, not become empty
-	cfg, err := Load(nil, testLookup(map[string]string{"API_KEYS": ""}))
+	cfg, err := Load(nil, testLookup(validEnv(map[string]string{"API_KEYS": ""})))
 	if err != nil {
 		t.Fatalf("load: %v", err)
 	}
@@ -95,11 +103,64 @@ func TestZeroValueEnv(t *testing.T) {
 }
 
 func TestAPIKeyRolesDefaultEmpty(t *testing.T) {
-	cfg, err := Load(nil, testLookup(map[string]string{"API_KEY_ROLES": "admin,operator"}))
+	cfg, err := Load(nil, testLookup(validEnv(map[string]string{"API_KEY_ROLES": "admin,operator"})))
 	if err != nil {
 		t.Fatalf("load: %v", err)
 	}
 	if len(cfg.APIKeyRoles) != 2 {
 		t.Errorf("api key roles = %v", cfg.APIKeyRoles)
+	}
+}
+
+func TestAuthenticationFailsClosed(t *testing.T) {
+	if _, err := Load(nil, testLookup(nil)); err == nil {
+		t.Fatal("want missing API_KEYS to fail")
+	}
+}
+
+func TestProductionRejectsInsecureModes(t *testing.T) {
+	for _, env := range []map[string]string{
+		{"APP_ENV": "production", "API_KEYS": "hash", "CRYPTO_HSM": "GP"},
+		{"APP_ENV": "production", "API_KEYS": "hash", "CRYPTO_HSM": "PS", "ALLOW_INSECURE_AUTH": "true"},
+	} {
+		if _, err := Load(nil, testLookup(env)); err == nil {
+			t.Fatalf("want unsafe production config rejected: %v", env)
+		}
+	}
+}
+
+func TestProductionAcceptsHardwareHSM(t *testing.T) {
+	cfg, err := Load(nil, testLookup(map[string]string{
+		"APP_ENV":    "production",
+		"CRYPTO_HSM": "PS",
+		"API_KEYS":   "hash",
+	}))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if cfg.HSMType != "PS" || !cfg.AuthEnabled() {
+		t.Fatalf("unexpected config: %+v", cfg)
+	}
+}
+
+func TestInternalUnwrapRequiresAuthentication(t *testing.T) {
+	_, err := Load(nil, testLookup(map[string]string{
+		"ALLOW_INSECURE_AUTH":    "true",
+		"ENABLE_INTERNAL_UNWRAP": "true",
+	}))
+	if err == nil {
+		t.Fatal("want internal unwrap without API keys rejected")
+	}
+}
+
+func TestMalformedEnvironmentFails(t *testing.T) {
+	for _, env := range []map[string]string{
+		{"PORT": "abc"},
+		{"READ_TIMEOUT": "soon"},
+		{"GRPC_REFLECTION": "perhaps"},
+	} {
+		if _, err := Load(nil, testLookup(validEnv(env))); err == nil {
+			t.Fatalf("want malformed environment rejected: %v", env)
+		}
 	}
 }

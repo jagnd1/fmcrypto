@@ -4,10 +4,16 @@
 // layer. All keys travel as LMK-wrapped key blocks.
 package hsm
 
+import "context"
+
 // HSM is the abstract hardware-security-module interface. Method signatures
 // mirror the real-HSM API surface; GP implements them with the software key
 // store so signatures match across providers.
 type HSM interface {
+	// Ready checks whether the provider can accept operations. Software GP is
+	// always ready; hardware adapters should verify their session/connection.
+	Ready(ctx context.Context) error
+
 	// KpGen generates an RSA/ECC key pair. Returns the DER public key and the
 	// LMK-wrapped private key.
 	KpGen(algo, useMode string) (pk, skLMK []byte, err error)

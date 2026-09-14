@@ -11,7 +11,7 @@ framework (`services/common`). It serves the fmcrypto crypto/PKI API over
 - **Layered**: `handlers → services (usecase) → HSM seam → crypto engine`,
   interfaces defined where consumed, manual DI at the composition root.
 - **HSM abstraction**: the usecase depends only on the `hsm.HSM` interface.
-  `GP` (software, LMK-wrapped TR-31 key blocks) is the default provider; real
+  `GP` (software, LMK-wrapped TR-31 key blocks) is a development provider; real
   HSMs (PS/AT) plug in at `main.go` (`CRYPTO_HSM`) with no usecase changes.
 - **Lean**: no database (the service is stateless); the only third-party
   runtime deps are `grpc` + `protobuf` for the gRPC transport.
@@ -48,7 +48,8 @@ main.go (composition root)
 ## Endpoints
 
 REST (`/v1/crypto/*` and `/v1/serv/*`) and gRPC (`crypto.v1.CryptoService`)
-expose the same 19 operations:
+expose the same operations. The internal `unwrap` command is disabled by
+default:
 
 - Key management: `kp_gen`, `key_gen`, `kcv_gen`, `exp_key`, `exp_tr31`,
   `exp_tr34`, `wrap`, `unwrap`
@@ -60,9 +61,9 @@ expose the same 19 operations:
 
 The service is headless (service-to-service): auth is **API-key based**.
 
-- **REST**: API key (`X-API-Key` or `Authorization: Bearer <crypto_…>`) required
-  when `API_KEYS` is configured; otherwise open (`PermitAll`).
-- **gRPC**: API key always required (strict, via the `APIKeyInterceptor`).
+- **REST and gRPC**: an API key is required by default. Open local development
+  requires an explicit `ALLOW_INSECURE_AUTH=true` override, which production
+  rejects.
 
 API keys are stateless: sha256 hashes configured via `API_KEYS` (env). See
 `.env.example` and the root [`docs/`](../../docs).

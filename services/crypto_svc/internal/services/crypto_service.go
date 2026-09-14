@@ -6,11 +6,23 @@ import (
 	"fmt"
 	"strconv"
 
+	"cryptosvc/internal/crypto"
 	"cryptosvc/internal/dto"
 	"cryptosvc/internal/hsm"
 )
 
-const statusSuccess = "success"
+const (
+	statusSuccess  = "success"
+	maxRandomBytes = 4096
+)
+
+func decodeHex(field, value string) ([]byte, error) {
+	b, err := hex.DecodeString(value)
+	if err != nil {
+		return nil, crypto.ErrInvalid{Msg: fmt.Sprintf("%s must be valid hexadecimal", field)}
+	}
+	return b, nil
+}
 
 // Crypto is the usecase layer for /v1/crypto. It is transport-agnostic and
 // depends only on the HSM seam — the provider (GP/PS/AT) is injected at the
@@ -31,7 +43,7 @@ func (c *Crypto) KpGen(ctx context.Context, req dto.KpGenReq) (dto.KpGenResp, er
 }
 
 func (c *Crypto) GenSign(ctx context.Context, req dto.SignReq) (dto.SignResp, error) {
-	msg, err := hex.DecodeString(req.Msg)
+	msg, err := decodeHex("msg", req.Msg)
 	if err != nil {
 		return dto.SignResp{}, err
 	}
@@ -51,7 +63,7 @@ func (c *Crypto) Ecdh(ctx context.Context, req dto.EcdhReq) (dto.EcdhResp, error
 	if err != nil {
 		return dto.EcdhResp{}, err
 	}
-	shared, err := hex.DecodeString(req.SharedInfo)
+	shared, err := decodeHex("shared_info", req.SharedInfo)
 	if err != nil {
 		return dto.EcdhResp{}, err
 	}
@@ -79,7 +91,7 @@ func (c *Crypto) ExpKey(ctx context.Context, req dto.ExpKeyReq) (dto.ExpKeyResp,
 			return dto.ExpKeyResp{}, err
 		}
 	}
-	kcv, err := hex.DecodeString(req.Kcv)
+	kcv, err := decodeHex("kcv", req.Kcv)
 	if err != nil {
 		return dto.ExpKeyResp{}, err
 	}
@@ -108,8 +120,8 @@ func (c *Crypto) ExpTr31(ctx context.Context, req dto.ExpTr31Req) (dto.ExpTr31Re
 
 func (c *Crypto) RandGen(ctx context.Context, req dto.RandGenReq) (dto.RandGenResp, error) {
 	n, err := strconv.Atoi(req.Len)
-	if err != nil || n < 0 {
-		return dto.RandGenResp{}, fmt.Errorf("invalid length")
+	if err != nil || n < 0 || n > maxRandomBytes {
+		return dto.RandGenResp{}, crypto.ErrInvalid{Msg: fmt.Sprintf("len must be between 0 and %d", maxRandomBytes)}
 	}
 	b, err := c.hsm.RandGen(n)
 	if err != nil {
@@ -167,16 +179,16 @@ func (c *Crypto) IpekDerive(ctx context.Context, req dto.IpekDeriveReq) (dto.Ipe
 	if err != nil {
 		return dto.IpekDeriveResp{}, err
 	}
-	iksn, err := hex.DecodeString(req.Iksn)
+	iksn, err := decodeHex("iksn", req.Iksn)
 	if err != nil {
 		return dto.IpekDeriveResp{}, err
 	}
+	if len(iksn) != 8 {
+		return dto.IpekDeriveResp{}, crypto.ErrInvalid{Msg: "iksn must be exactly 8 bytes"}
+	}
 	var tk []byte
 	if req.Tk != "" {
-		tk, err = b64Decode(req.Tk)
-		if err != nil {
-			return dto.IpekDeriveResp{}, err
-		}
+		return dto.IpekDeriveResp{}, crypto.ErrInvalid{Msg: "tk export is not supported by the GP provider"}
 	}
 	ipekLMK, kcv, err := c.hsm.IpekDerive(bdk, iksn, tk, req.Algo, req.UseMode)
 	if err != nil {
@@ -195,7 +207,7 @@ func (c *Crypto) DataEncr(ctx context.Context, req dto.DataEncrReq) (dto.DataEnc
 	if err != nil {
 		return dto.DataEncrResp{}, err
 	}
-	msg, err := hex.DecodeString(req.Msg)
+	msg, err := decodeHex("msg", req.Msg)
 	if err != nil {
 		return dto.DataEncrResp{}, err
 	}
@@ -211,7 +223,7 @@ func (c *Crypto) DataDecr(ctx context.Context, req dto.DataDecrReq) (dto.DataDec
 	if err != nil {
 		return dto.DataDecrResp{}, err
 	}
-	ct, err := hex.DecodeString(req.EncrMsg)
+	ct, err := decodeHex("encr_msg", req.EncrMsg)
 	if err != nil {
 		return dto.DataDecrResp{}, err
 	}
@@ -223,11 +235,17 @@ func (c *Crypto) DataDecr(ctx context.Context, req dto.DataDecrReq) (dto.DataDec
 }
 
 func (c *Crypto) Mac(ctx context.Context, req dto.MacReq) (dto.MacResp, error) {
+	if req.Ksn != "" {
+		return dto.MacResp{}, crypto.ErrInvalid{Msg: "ksn-based MAC is not supported by the GP provider"}
+	}
+	if req.MacMode != string(crypto.MacModeGenerate) {
+		return dto.MacResp{}, crypto.ErrInvalid{Msg: "GP supports mac_mode GENERATE only"}
+	}
 	keyLMK, err := b64Decode(req.KeyLmk)
 	if err != nil {
 		return dto.MacResp{}, err
 	}
-	msg, err := hex.DecodeString(req.Msg)
+	msg, err := decodeHex("msg", req.Msg)
 	if err != nil {
 		return dto.MacResp{}, err
 	}
@@ -239,6 +257,9 @@ func (c *Crypto) Mac(ctx context.Context, req dto.MacReq) (dto.MacResp, error) {
 }
 
 func (c *Crypto) TransPin(ctx context.Context, req dto.TransPinReq) (dto.TransPinResp, error) {
+	if req.DestKsn != "" {
+		return dto.TransPinResp{}, crypto.ErrInvalid{Msg: "dest_ksn is not supported by the GP provider"}
+	}
 	keyLMK, err := b64Decode(req.KeyLmk)
 	if err != nil {
 		return dto.TransPinResp{}, err
@@ -247,13 +268,19 @@ func (c *Crypto) TransPin(ctx context.Context, req dto.TransPinReq) (dto.TransPi
 	if err != nil {
 		return dto.TransPinResp{}, err
 	}
-	ksn, err := hex.DecodeString(req.Ksn)
+	ksn, err := decodeHex("ksn", req.Ksn)
 	if err != nil {
 		return dto.TransPinResp{}, err
 	}
-	srcPinblk, err := hex.DecodeString(req.SrcPinblk)
+	if len(ksn) != 12 {
+		return dto.TransPinResp{}, crypto.ErrInvalid{Msg: "ksn must be exactly 12 bytes"}
+	}
+	srcPinblk, err := decodeHex("src_pinblk", req.SrcPinblk)
 	if err != nil {
 		return dto.TransPinResp{}, err
+	}
+	if len(srcPinblk) != 16 {
+		return dto.TransPinResp{}, crypto.ErrInvalid{Msg: "src_pinblk must be exactly 16 bytes"}
 	}
 	destPinblk, err := c.hsm.TransPin(keyLMK, destKey, ksn, srcPinblk, req.Pan)
 	if err != nil {

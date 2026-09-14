@@ -33,6 +33,10 @@ func Err(w http.ResponseWriter, r *http.Request, err error) {
 		to  errs.Timeout
 		up  errs.Upstream
 		ni  errs.NotImplemented
+		ci  interface {
+			error
+			InvalidMessage() string
+		}
 	)
 	switch {
 	case errors.As(err, &bad):
@@ -41,6 +45,8 @@ func Err(w http.ResponseWriter, r *http.Request, err error) {
 		writeJSON(w, r, http.StatusRequestEntityTooLarge, errBody(r, big.Msg, nil))
 	case errors.As(err, &inv):
 		writeJSON(w, r, http.StatusUnprocessableEntity, errBody(r, inv.Msg, inv.Fields))
+	case errors.As(err, &ci):
+		writeJSON(w, r, http.StatusUnprocessableEntity, errBody(r, ci.InvalidMessage(), nil))
 	case errors.As(err, &un):
 		writeJSON(w, r, http.StatusUnauthorized, errBody(r, un.Msg, nil))
 	case errors.As(err, &fb):

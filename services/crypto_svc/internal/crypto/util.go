@@ -28,6 +28,16 @@ type ErrInvalid struct{ Msg string }
 
 func (e ErrInvalid) Error() string { return e.Msg }
 
+// InvalidMessage marks provider validation failures as safe client-input
+// errors. Transport adapters recognize this narrow interface without importing
+// the crypto implementation.
+func (e ErrInvalid) InvalidMessage() string {
+	if e.Msg == "" {
+		return "invalid cryptographic input"
+	}
+	return e.Msg
+}
+
 // xor returns a^b (same length).
 func xor(a, b []byte) []byte {
 	out := make([]byte, len(a))

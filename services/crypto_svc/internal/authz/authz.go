@@ -28,6 +28,9 @@ var rolePerms = map[string][]string{
 	"reader": {
 		"crypto:rand_gen",
 	},
+	"key_custodian": {
+		"internal:unwrap",
+	},
 }
 
 // Can reports whether any of the user's roles grants the permission.
@@ -61,7 +64,7 @@ func (Policy) Authorize(ctx context.Context, perm string) error {
 	return nil
 }
 
-// PermitAll opens every endpoint — injected in dev when no IdP is configured.
+// PermitAll opens every registered endpoint in explicitly insecure local mode.
 type PermitAll struct{}
 
 func (PermitAll) Authorize(context.Context, string) error { return nil }

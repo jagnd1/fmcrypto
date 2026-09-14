@@ -12,5 +12,5 @@ WORKDIR /app
 COPY --from=builder /crypto .
 COPY --from=builder /app/crypto_svc/docker-entrypoint.sh .
 RUN chmod +x docker-entrypoint.sh
-EXPOSE 8001
+EXPOSE 8001 50051
 ENTRYPOINT ["./docker-entrypoint.sh"]

@@ -10,9 +10,9 @@ type KpGenReq struct {
 }
 
 type KpGenResp struct {
-	Status string  `json:"status"`
-	Pk     string  `json:"pk,omitempty"`
-	SkLmk  string  `json:"sk_lmk,omitempty"`
+	Status string `json:"status"`
+	Pk     string `json:"pk,omitempty"`
+	SkLmk  string `json:"sk_lmk,omitempty"`
 }
 
 type SignReq struct {
@@ -27,10 +27,10 @@ type SignResp struct {
 }
 
 type EcdhReq struct {
-	EphPk     string `json:"eph_pk"`
-	Algo      string `json:"algo"`
-	KeyType   string `json:"key_type"`
-	UseMode   string `json:"use_mode"`
+	EphPk      string `json:"eph_pk"`
+	Algo       string `json:"algo"`
+	KeyType    string `json:"key_type"`
+	UseMode    string `json:"use_mode"`
 	SharedInfo string `json:"shared_info,omitempty"`
 }
 
@@ -166,12 +166,12 @@ type MacResp struct {
 }
 
 type TransPinReq struct {
-	KeyLmk   string `json:"key_lmk"`
-	Ksn      string `json:"ksn,omitempty"`
+	KeyLmk    string `json:"key_lmk"`
+	Ksn       string `json:"ksn,omitempty"`
 	SrcPinblk string `json:"src_pinblk"`
-	DestKey  string `json:"dest_key"`
-	DestKsn  string `json:"dest_ksn,omitempty"`
-	Pan      string `json:"pan"`
+	DestKey   string `json:"dest_key"`
+	DestKsn   string `json:"dest_ksn,omitempty"`
+	Pan       string `json:"pan"`
 }
 
 type TransPinResp struct {
@@ -187,8 +187,8 @@ type WrapReq struct {
 }
 
 type WrapResp struct {
-	Status   string `json:"status"`
-	KeyKbpk  string `json:"key_kbpk"`
+	Status  string `json:"status"`
+	KeyKbpk string `json:"key_kbpk"`
 }
 
 type UnwrapReq struct {

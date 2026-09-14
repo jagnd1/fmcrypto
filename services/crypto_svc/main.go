@@ -43,7 +43,7 @@ func main() {
 	logging.Setup(slog.LevelInfo)
 
 	// HSM provider — a single seam over symmetric-key and PKI operations. GP is
-// the software implementation; real HSMs (PS/AT) plug in here unchanged.
+	// the software implementation; real HSMs (PS/AT) plug in here unchanged.
 	var h hsm.HSM
 	switch cfg.HSMType {
 	case "", "GP":
@@ -74,17 +74,19 @@ func main() {
 	var authorizer handlers.Authorizer = authz.PermitAll{}
 	if authEnabled {
 		authorizer = authz.Policy{}
+	} else {
+		slog.WarnContext(ctx, "authentication disabled by explicit local-development override")
 	}
 
 	root := http.NewServeMux()
-	health.Register(root) // public probes bypass auth
+	health.Register(root, h) // public probes bypass auth
 
 	apiMux := http.NewServeMux()
-	routers.Register(apiMux, handlers.New(cryptoSvc, serverSvc, authorizer))
+	routers.Register(apiMux, handlers.New(cryptoSvc, serverSvc, authorizer), cfg.EnableInternalUnwrap)
 
 	apiMws := []func(http.Handler) http.Handler{}
 	if authEnabled {
-		// REST requires an API key when keys are configured; otherwise open.
+		// Insecure operation is available only through the explicit local override.
 		apiMws = append(apiMws, svcmw.APIKeyAuth(apiKeyVerifier))
 	}
 	apiMws = append(apiMws, middleware.MaxBodyBytes(1<<20), middleware.Timeout(5*time.Second))
@@ -99,11 +101,12 @@ func main() {
 	)
 
 	srv := &http.Server{
-		Addr:         fmt.Sprintf(":%d", cfg.Port),
-		Handler:      handler,
-		ReadTimeout:  cfg.ReadTimeout,
-		WriteTimeout: cfg.WriteTimeout,
-		IdleTimeout:  cfg.IdleTimeout,
+		Addr:              fmt.Sprintf(":%d", cfg.Port),
+		Handler:           handler,
+		ReadTimeout:       cfg.ReadTimeout,
+		ReadHeaderTimeout: cfg.ReadHeaderTimeout,
+		WriteTimeout:      cfg.WriteTimeout,
+		IdleTimeout:       cfg.IdleTimeout,
 	}
 
 	go func() {
@@ -115,12 +118,21 @@ func main() {
 	}()
 
 	// gRPC transport: machine clients authenticate with an API key (strict).
-	grpcServer := grpc.NewServer(grpc.ChainUnaryInterceptor(
-		grpcserver.RecoverInterceptor(), // outermost: panics never kill the server
-		grpcserver.APIKeyInterceptor(apiKeyVerifier),
-	))
-	cryptov1.RegisterCryptoServiceServer(grpcServer, grpcserver.New(cryptoSvc, serverSvc))
-	reflection.Register(grpcServer) // service discovery for grpcurl/dev tools
+	grpcAuth := grpcserver.APIKeyInterceptor(apiKeyVerifier)
+	if !authEnabled {
+		grpcAuth = grpcserver.InsecureDevelopmentInterceptor()
+	}
+	grpcServer := grpc.NewServer(
+		grpc.MaxRecvMsgSize(1<<20),
+		grpc.MaxSendMsgSize(4<<20),
+		grpc.ChainUnaryInterceptor(
+			grpcserver.RecoverInterceptor(), // outermost: panics never kill the server
+			grpcAuth,
+		))
+	cryptov1.RegisterCryptoServiceServer(grpcServer, grpcserver.New(cryptoSvc, serverSvc, cfg.EnableInternalUnwrap))
+	if cfg.GRPCReflection {
+		reflection.Register(grpcServer)
+	}
 	grpcLis, err := net.Listen("tcp", fmt.Sprintf(":%d", cfg.GRPCPort))
 	if err != nil {
 		slog.ErrorContext(ctx, "grpc listen", "err", err)
@@ -141,8 +153,20 @@ func main() {
 	slog.InfoContext(ctx, "shutting down")
 	shutdownCtx, cancel := context.WithTimeout(ctx, 10*time.Second)
 	defer cancel()
-	grpcServer.GracefulStop()
-	if err := srv.Shutdown(shutdownCtx); err != nil {
+	httpDone := make(chan error, 1)
+	go func() { httpDone <- srv.Shutdown(shutdownCtx) }()
+	grpcDone := make(chan struct{})
+	go func() {
+		grpcServer.GracefulStop()
+		close(grpcDone)
+	}()
+	select {
+	case <-grpcDone:
+	case <-shutdownCtx.Done():
+		slog.WarnContext(ctx, "gRPC graceful shutdown timed out; forcing stop")
+		grpcServer.Stop()
+	}
+	if err := <-httpDone; err != nil {
 		slog.ErrorContext(ctx, "shutdown", "err", err)
 		os.Exit(1)
 	}

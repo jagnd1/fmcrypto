@@ -11,7 +11,7 @@ import (
 // Register wires all crypto-service REST routes onto the given mux.
 // Auth is applied at the outer middleware layer (see main.go); each route
 // carries a resource:action permission checked by handlers.Server.authorize.
-func Register(mux *http.ServeMux, s *handlers.Server) {
+func Register(mux *http.ServeMux, s *handlers.Server, enableInternalUnwrap bool) {
 	register := func(pattern string, hf http.HandlerFunc) {
 		mux.Handle(pattern, middleware.RoutePattern(pattern)(hf))
 	}
@@ -32,7 +32,9 @@ func Register(mux *http.ServeMux, s *handlers.Server) {
 	register("POST /v1/crypto/mac", s.Mac)
 	register("POST /v1/crypto/trans_pin", s.TransPin)
 	register("POST /v1/crypto/wrap", s.Wrap)
-	register("POST /v1/crypto/unwrap", s.Unwrap)
+	if enableInternalUnwrap {
+		register("POST /v1/crypto/unwrap", s.Unwrap)
+	}
 
 	// /v1/serv/*
 	register("POST /v1/serv/cert", s.CertCreate)

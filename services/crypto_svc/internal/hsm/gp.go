@@ -1,6 +1,7 @@
 package hsm
 
 import (
+	"context"
 	"encoding/hex"
 	"fmt"
 
@@ -21,6 +22,8 @@ func NewGP(lmk []byte) *GP {
 	}
 	return &GP{lmk: lmk}
 }
+
+func (g *GP) Ready(context.Context) error { return nil }
 
 func (g *GP) KpGen(algo, _ string) ([]byte, []byte, error) {
 	pk, skLMK, err := crypto.GenKP(crypto.Algo(algo), g.lmk)
@@ -52,6 +55,9 @@ func (g *GP) ExpKey(keyLMK, kcv, pk []byte) ([]byte, error) {
 }
 
 func (g *GP) ExpTr31(expKey, key []byte) ([]byte, error) {
+	if len(key) < 12 {
+		return nil, crypto.ErrInvalid{Msg: "key_lmk is too short to contain a TR-31 header"}
+	}
 	expKeyClear, err := crypto.UnwrapKey(crypto.AlgoA128, g.lmk, string(expKey))
 	if err != nil {
 		return nil, err
@@ -97,6 +103,9 @@ func (g *GP) KcvGen(keyLMK []byte) ([]byte, error) {
 }
 
 func (g *GP) IpekDerive(bdkLMK, iksn, _ []byte, algo, _ string) ([]byte, []byte, error) {
+	if len(iksn) != 8 {
+		return nil, nil, crypto.ErrInvalid{Msg: "iksn must be exactly 8 bytes"}
+	}
 	bdkClear, err := crypto.UnwrapKey(crypto.Algo(algo), g.lmk, string(bdkLMK))
 	if err != nil {
 		return nil, nil, err
@@ -120,15 +129,18 @@ func (g *GP) IpekDerive(bdkLMK, iksn, _ []byte, algo, _ string) ([]byte, []byte,
 	return []byte(ipekBlob), kcv, nil
 }
 
-func (g *GP) DataEncr(msg, keyLMK []byte, iv, _, algo string) ([]byte, error) {
-	return crypto.Encrypt(crypto.Algo(algo), g.lmk, crypto.EncrModeCBCPad, string(keyLMK), []byte(iv), msg)
+func (g *GP) DataEncr(msg, keyLMK []byte, iv, mode, algo string) ([]byte, error) {
+	return crypto.Encrypt(crypto.Algo(algo), g.lmk, crypto.EncrMode(mode), string(keyLMK), []byte(iv), msg)
 }
 
-func (g *GP) DataDecr(keyLMK []byte, iv string, encrMsg []byte, _, algo string) ([]byte, error) {
-	return crypto.Decrypt(crypto.Algo(algo), g.lmk, crypto.EncrModeCBCPad, string(keyLMK), []byte(iv), encrMsg)
+func (g *GP) DataDecr(keyLMK []byte, iv string, encrMsg []byte, mode, algo string) ([]byte, error) {
+	return crypto.Decrypt(crypto.Algo(algo), g.lmk, crypto.EncrMode(mode), string(keyLMK), []byte(iv), encrMsg)
 }
 
-func (g *GP) Mac(keyLMK, msg []byte, _ string) ([]byte, error) {
+func (g *GP) Mac(keyLMK, msg []byte, mode string) ([]byte, error) {
+	if mode != string(crypto.MacModeGenerate) {
+		return nil, crypto.ErrInvalid{Msg: "GP supports mac_mode GENERATE only"}
+	}
 	mac, err := crypto.Sign(crypto.AlgoA128, g.lmk, string(keyLMK), msg)
 	if err != nil {
 		return nil, err
@@ -140,6 +152,12 @@ func (g *GP) Mac(keyLMK, msg []byte, _ string) ([]byte, error) {
 }
 
 func (g *GP) TransPin(keyLMK, destKey, ksn, srcPinblk []byte, pan string) ([]byte, error) {
+	if len(ksn) != 12 {
+		return nil, crypto.ErrInvalid{Msg: "ksn must be exactly 12 bytes"}
+	}
+	if len(srcPinblk) != 16 {
+		return nil, crypto.ErrInvalid{Msg: "src_pinblk must be exactly 16 bytes"}
+	}
 	ipekClear, err := crypto.UnwrapKey(crypto.AlgoA128, g.lmk, string(keyLMK))
 	if err != nil {
 		return nil, err
@@ -249,7 +267,7 @@ func dukptKeyType(algo crypto.Algo) (dukpt.KeyType, error) {
 	case crypto.AlgoA256:
 		return dukpt.AES256, nil
 	}
-	return 0, fmt.Errorf("invalid dukpt algo %s", algo)
+	return 0, crypto.ErrInvalid{Msg: fmt.Sprintf("invalid dukpt algo %s", algo)}
 }
 
 func xorBytes(a, b []byte) []byte {
@@ -263,19 +281,27 @@ func xorBytes(a, b []byte) []byte {
 func parsePinField(field []byte) (string, error) {
 	hexStr := hex.EncodeToString(field)
 	if len(hexStr) < 4 {
-		return "", fmt.Errorf("pin field too short")
+		return "", crypto.ErrInvalid{Msg: "pin field too short"}
 	}
 	pinLen := int(hexStr[1] - '0')
 	if pinLen < 4 || pinLen > 16 || 2+pinLen > len(hexStr) {
-		return "", fmt.Errorf("pin length invalid: %d", pinLen)
+		return "", crypto.ErrInvalid{Msg: fmt.Sprintf("pin length invalid: %d", pinLen)}
 	}
 	return hexStr[2 : 2+pinLen], nil
 }
 
 func panField(panHex string) ([]byte, error) {
+	if len(panHex) < 12 {
+		return nil, crypto.ErrInvalid{Msg: "pan must contain at least 12 digits"}
+	}
+	for _, r := range panHex {
+		if r < '0' || r > '9' {
+			return nil, crypto.ErrInvalid{Msg: "pan must contain decimal digits only"}
+		}
+	}
 	s := "4" + panHex
 	if len(s) > 32 {
-		return nil, fmt.Errorf("pan field too long")
+		return nil, crypto.ErrInvalid{Msg: "pan field too long"}
 	}
 	for len(s) < 32 {
 		s += "0"

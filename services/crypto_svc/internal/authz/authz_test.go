@@ -9,7 +9,8 @@ func TestCan(t *testing.T) {
 		want  bool
 	}{
 		{"crypto:kp_gen", []string{"admin"}, true},
-		{"crypto:unwrap", []string{"admin"}, true},
+		{"internal:unwrap", []string{"admin"}, false},
+		{"internal:unwrap", []string{"key_custodian"}, true},
 		{"serv:crl", []string{"admin"}, true},
 		{"crypto:kp_gen", []string{"operator"}, false},
 		{"crypto:data_encr", []string{"operator"}, true},

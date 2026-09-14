@@ -103,8 +103,8 @@ func tr34BuildRI(encCertDER, ek []byte) ([]byte, error) {
 	rid := issuerSerial // RecipientIdentifier → issuerAndSerialNumber (untagged CHOICE)
 
 	oaepParams := derSeq(
-		derSeq(derOID(oidSHA256)),                            // hashAlgorithm
-		derSeq(derOID(oidMGF1), derSeq(derOID(oidSHA256))),   // maskGenAlgorithm
+		derSeq(derOID(oidSHA256)),                          // hashAlgorithm
+		derSeq(derOID(oidMGF1), derSeq(derOID(oidSHA256))), // maskGenAlgorithm
 	)
 	keyEncAlgo := derSeq(derOID(oidRSAESOAEP), oaepParams)
 
@@ -192,20 +192,20 @@ func Tr34BuildSD(kdhCertDER []byte, skLMK string, lmk []byte, edDER []byte) ([]b
 
 	sid := derSeq(derRaw(issuerDER), derBigInt(serial))
 	signerInfo := derSeq(
-		derInt(1),                              // version
-		sid,                                    // issuerAndSerialNumber
-		derSeq(derOID(oidSHA256)),              // digestAlgorithm
-		derRaw(signedAttrs),                    // signedAttrs [0] IMPLICIT SET
-		derSeq(derOID(oidRSASSA)),              // signatureAlgorithm
-		derOctet(signature),                    // signature
+		derInt(1),                 // version
+		sid,                       // issuerAndSerialNumber
+		derSeq(derOID(oidSHA256)), // digestAlgorithm
+		derRaw(signedAttrs),       // signedAttrs [0] IMPLICIT SET
+		derSeq(derOID(oidRSASSA)), // signatureAlgorithm
+		derOctet(signature),       // signature
 	)
 
 	encapContentInfo := derSeq(derOID(oidData), derExplicitContext(0, derOctet(edDER)))
 	signedData := derSeq(
-		derInt(1),                                          // version v1
-		derSet(derSeq(derOID(oidSHA256))),                  // digestAlgorithms
-		encapContentInfo,                                   // eContent (wraps edDER)
-		derSet(signerInfo),                                 // signerInfos
+		derInt(1),                         // version v1
+		derSet(derSeq(derOID(oidSHA256))), // digestAlgorithms
+		encapContentInfo,                  // eContent (wraps edDER)
+		derSet(signerInfo),                // signerInfos
 	)
 	return derSeq(derOID(oidSignedData), derExplicitContext(0, signedData)), nil
 }

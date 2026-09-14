@@ -16,10 +16,10 @@ import (
 	"cryptosvc/internal/services"
 )
 
-func newTestServer(authorizer handlers.Authorizer) *http.ServeMux {
+func newTestServer(authorizer handlers.Authorizer, enableInternalUnwrap bool) *http.ServeMux {
 	mux := http.NewServeMux()
 	gp := hsm.NewGP(nil)
-	routers.Register(mux, handlers.New(services.NewCrypto(gp), services.NewServer(gp), authorizer))
+	routers.Register(mux, handlers.New(services.NewCrypto(gp), services.NewServer(gp), authorizer), enableInternalUnwrap)
 	return mux
 }
 
@@ -36,7 +36,7 @@ func doAs(t *testing.T, mux *http.ServeMux, method, path, body string, roles []s
 }
 
 func TestRouteRegistration(t *testing.T) {
-	mux := newTestServer(authz.PermitAll{})
+	mux := newTestServer(authz.PermitAll{}, true)
 	paths := []struct{ method, path string }{
 		{"POST", "/v1/crypto/kp_gen"},
 		{"POST", "/v1/crypto/gen_sign"},
@@ -67,7 +67,7 @@ func TestRouteRegistration(t *testing.T) {
 }
 
 func TestRBACDenied(t *testing.T) {
-	mux := newTestServer(authz.Policy{})
+	mux := newTestServer(authz.Policy{}, false)
 	// read-only role cannot generate key pairs
 	rec := doAs(t, mux, http.MethodPost, "/v1/crypto/kp_gen", `{}`, []string{"reader"})
 	if rec.Code != http.StatusForbidden {
@@ -88,7 +88,7 @@ func TestRBACDenied(t *testing.T) {
 }
 
 func TestHappyPathEndpoints(t *testing.T) {
-	mux := newTestServer(authz.PermitAll{})
+	mux := newTestServer(authz.PermitAll{}, false)
 
 	// rand_gen
 	rec := doAs(t, mux, http.MethodPost, "/v1/crypto/rand_gen", `{"len":"12"}`, []string{"admin"})
@@ -148,6 +148,46 @@ func TestHappyPathEndpoints(t *testing.T) {
 	}
 	if err := json.Unmarshal(rec.Body.Bytes(), &kcv); err != nil || kcv.Kcv == "" {
 		t.Fatalf("kcv_gen bad response: %s", rec.Body)
+	}
+}
+
+func TestInternalUnwrapDisabledByDefault(t *testing.T) {
+	mux := newTestServer(authz.Policy{}, false)
+	rec := doAs(t, mux, http.MethodPost, "/v1/crypto/unwrap", `{}`, []string{"key_custodian"})
+	if rec.Code != http.StatusNotFound {
+		t.Fatalf("unwrap disabled: want 404, got %d", rec.Code)
+	}
+}
+
+func TestInternalUnwrapRequiresDedicatedRole(t *testing.T) {
+	mux := newTestServer(authz.Policy{}, true)
+	rec := doAs(t, mux, http.MethodPost, "/v1/crypto/unwrap", `{}`, []string{"admin"})
+	if rec.Code != http.StatusForbidden {
+		t.Fatalf("admin unwrap: want 403, got %d", rec.Code)
+	}
+	rec = doAs(t, mux, http.MethodPost, "/v1/crypto/unwrap", `{}`, []string{"key_custodian"})
+	if rec.Code == http.StatusForbidden || rec.Code == http.StatusUnauthorized {
+		t.Fatalf("key custodian should pass authorization, got %d", rec.Code)
+	}
+}
+
+func TestInvalidCryptoInputsReturnValidationErrors(t *testing.T) {
+	mux := newTestServer(authz.PermitAll{}, false)
+	cases := []struct {
+		path string
+		body string
+	}{
+		{"/v1/crypto/rand_gen", `{"len":"4097"}`},
+		{"/v1/crypto/gen_sign", `{"msg":"not-hex","sk_lmk":"bad","algo":"ECP256"}`},
+		{"/v1/crypto/ipek_derive", `{"bdk_lmk":"bad","iksn":"0102","algo":"A128","use_mode":"DERIV"}`},
+		{"/v1/crypto/mac", `{"key_lmk":"bad","mac_mode":"VERIFY","msg":"00"}`},
+		{"/v1/crypto/trans_pin", `{"key_lmk":"bad","dest_key":"bad","ksn":"01","src_pinblk":"00","pan":"123456789012"}`},
+	}
+	for _, tc := range cases {
+		rec := doAs(t, mux, http.MethodPost, tc.path, tc.body, []string{"admin"})
+		if rec.Code != http.StatusUnprocessableEntity {
+			t.Errorf("%s: want 422, got %d: %s", tc.path, rec.Code, rec.Body.String())
+		}
 	}
 }
 
