@@ -6,9 +6,14 @@ services:
     environment:
       PORT: ${PORT:-8001}
       GRPC_PORT: ${GRPC_PORT:-50051}
+      APP_ENV: ${APP_ENV:-development}
       # HSM provider: GP (software) / PS / AT (real HSMs)
       CRYPTO_HSM: ${CRYPTO_HSM:-GP}
-      # headless service-to-service auth via API keys (blank API_KEYS = open REST)
+      # Explicit local-only overrides. Disable them in deployments.
+      ALLOW_INSECURE_AUTH: ${ALLOW_INSECURE_AUTH:-true}
+      GRPC_REFLECTION: ${GRPC_REFLECTION:-true}
+      ENABLE_INTERNAL_UNWRAP: ${ENABLE_INTERNAL_UNWRAP:-false}
+      # Headless service-to-service auth via API keys.
       API_KEY_PREFIX: ${API_KEY_PREFIX:-crypto_}
       API_KEYS: ${API_KEYS:-}
       API_KEY_ROLES: ${API_KEY_ROLES:-admin}

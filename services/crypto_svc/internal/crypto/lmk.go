@@ -7,7 +7,8 @@ import (
 
 // Software-HSM symmetric key layer. Keys are held "under the LMK" as TR-31
 // (version D) key blocks. The LMK is derived from the configured master
-// secret (default sha256("lmk")).
+// secret. GP uses sha256("lmk") only as a deterministic local/test fallback;
+// configuration prevents the GP provider from running in production.
 
 const (
 	headerSym    = "DD0AB00E" // AES

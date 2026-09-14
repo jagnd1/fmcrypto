@@ -16,6 +16,7 @@ type Invalid struct {
 	Msg    string
 	Fields map[string]string
 }
+
 func (e Invalid) Error() string { return e.Msg }
 
 type UnAuth struct{ Msg string } // 401
@@ -32,6 +33,7 @@ type RateLimited struct {
 	Msg        string
 	RetryAfter time.Duration
 }
+
 func (e RateLimited) Error() string {
 	if e.Msg == "" {
 		return "rate limit exceeded"
@@ -45,6 +47,7 @@ func (e Timeout) Error() string   { return e.Msg }
 // NotImplemented → 501; used while transport endpoints are scaffolded but the
 // underlying capability is not yet implemented.
 type NotImplemented struct{ Msg string }
+
 func (e NotImplemented) Error() string { return e.Msg }
 
 // Upstream → 502; wraps the cause with %w, never leaks detail to callers.
@@ -52,6 +55,7 @@ type Upstream struct {
 	Msg string
 	Err error
 }
+
 func (e Upstream) Error() string {
 	if e.Err == nil {
 		return e.Msg

@@ -39,11 +39,13 @@ services/
   third-party runtime deps are `grpc` + `protobuf` (gRPC transport). No database,
   no web framework, no crypto libraries.
 - **HSM abstraction**: all symmetric-key and PKI operations flow through the
-  `hsm.HSM` interface. GP (software, LMK-wrapped TR-31 key blocks) is the default;
+  `hsm.HSM` interface. GP (software, LMK-wrapped TR-31 key blocks) is the local
+  development default;
   a real customer HSM (PS/AT) plugs in at the composition root (`CRYPTO_HSM`)
   with no usecase changes.
-- **Key hygiene**: keys never leave the engine clear — they are created and
-  returned wrapped under the LMK, mirroring a real HSM.
+- **Key hygiene**: ordinary operations return keys wrapped under the LMK. The
+  clear-key `unwrap` command is an opt-in internal operation with a dedicated
+  role and audit boundary.
 
 ## quick start
 
@@ -52,8 +54,8 @@ cd services/crypto_svc && make run    # REST :8001, gRPC :50051
 docker compose up --build             # containerized, from repo root
 ```
 
-The service is headless (service-to-service): auth is API-key based. Set
-`API_KEYS` to require keys on REST; gRPC always requires a key. See
+The service is headless (service-to-service): auth is API-key based and fails
+closed. An explicit insecure override exists for local development only. See
 [`docs/setup.md`](docs/setup.md).
 
 ## testing

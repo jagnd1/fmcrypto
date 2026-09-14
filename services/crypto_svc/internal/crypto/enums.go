@@ -6,16 +6,16 @@ import "fmt"
 type Algo string
 
 const (
-	AlgoA128  Algo = "A128"
-	AlgoA192  Algo = "A192"
-	AlgoA256  Algo = "A256"
-	AlgoTDES  Algo = "TDES"
+	AlgoA128   Algo = "A128"
+	AlgoA192   Algo = "A192"
+	AlgoA256   Algo = "A256"
+	AlgoTDES   Algo = "TDES"
 	AlgoECP256 Algo = "ECP256"
 	AlgoECP384 Algo = "ECP384"
 	AlgoECP521 Algo = "ECP521"
-	AlgoR2K   Algo = "R2K"
-	AlgoR3K   Algo = "R3K"
-	AlgoR4K   Algo = "R4K"
+	AlgoR2K    Algo = "R2K"
+	AlgoR3K    Algo = "R3K"
+	AlgoR4K    Algo = "R4K"
 )
 
 // symmetric reports whether algo is an AES/TDES symmetric algorithm.

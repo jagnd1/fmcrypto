@@ -21,16 +21,24 @@ interpolation. Copy `.env.example` to `.env` and adjust:
 cp services/crypto_svc/.env.example .env
 ```
 
-Key vars: `PORT`, `GRPC_PORT`, `CRYPTO_HSM` (provider: `GP` software, future
-`PS`/`AT` real HSMs), `SOFTWARE_LMK` (software-HSM master key), and the API-key
-auth block (`API_KEY_PREFIX`, `API_KEYS`, `API_KEY_ROLES`).
+Key vars: `APP_ENV`, `PORT`, `GRPC_PORT`, `CRYPTO_HSM` (`GP` software, future
+`PS`/`AT` real HSMs), `SOFTWARE_LMK`, and the API-key auth block
+(`API_KEY_PREFIX`, `API_KEYS`, `API_KEY_ROLES`).
 
-**Auth** — set `API_KEYS` (sha256 hex hashes) to require API keys on REST;
-gRPC always requires a key. Generate a hash with:
+**Auth** — startup requires `API_KEYS` (sha256 hex hashes) unless the explicit
+`ALLOW_INSECURE_AUTH=true` local-development override is set. The override is
+rejected in production and applies consistently to REST and gRPC. Generate a
+hash with:
 
 ```bash
 printf '%s' "<plaintext-key>" | shasum -a 256 | cut -d' ' -f1
 ```
+
+GP is a deterministic development/test emulator and is rejected when
+`APP_ENV=production`. A production deployment must select a hardware provider
+after its adapter is implemented. gRPC reflection is disabled unless
+`GRPC_REFLECTION=true`. The internal clear-key `unwrap` command is separately
+controlled by `ENABLE_INTERNAL_UNWRAP` and the `key_custodian` role.
 
 ## Build
 

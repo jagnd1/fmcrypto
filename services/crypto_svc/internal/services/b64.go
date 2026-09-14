@@ -2,7 +2,10 @@ package services
 
 import (
 	"encoding/base64"
+	"fmt"
 	"strings"
+
+	"cryptosvc/internal/crypto"
 )
 
 // Base64url helpers (padded), tolerant of missing padding on decode (the
@@ -20,5 +23,9 @@ func b64Decode(s string) ([]byte, error) {
 	if m := len(s) % 4; m != 0 {
 		s += strings.Repeat("=", 4-m)
 	}
-	return base64.URLEncoding.DecodeString(s)
+	b, err := base64.URLEncoding.DecodeString(s)
+	if err != nil {
+		return nil, crypto.ErrInvalid{Msg: fmt.Sprintf("invalid base64 value: %v", err)}
+	}
+	return b, nil
 }

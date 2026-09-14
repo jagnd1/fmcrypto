@@ -58,15 +58,26 @@ func APIKeyInterceptor(v auth.APIKeyVerifier) grpc.UnaryServerInterceptor {
 	}
 }
 
+// InsecureDevelopmentInterceptor is used only when the explicit local
+// development override is active. It supplies the same admin identity that the
+// REST PermitAll authorizer represents; internal commands remain unavailable.
+func InsecureDevelopmentInterceptor() grpc.UnaryServerInterceptor {
+	return func(ctx context.Context, req any, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (any, error) {
+		uc := auth.UserContext{Subject: "insecure-development", Roles: []string{"admin"}}
+		return handler(auth.WithUserContext(ctx, uc), req)
+	}
+}
+
 // CryptoServer is a thin transport adapter over the same usecase layer.
 type CryptoServer struct {
 	cryptov1.UnimplementedCryptoServiceServer
-	crypto *services.Crypto
-	serv   *services.Server
+	crypto         *services.Crypto
+	serv           *services.Server
+	internalUnwrap bool
 }
 
-func New(crypto *services.Crypto, serv *services.Server) *CryptoServer {
-	return &CryptoServer{crypto: crypto, serv: serv}
+func New(crypto *services.Crypto, serv *services.Server, internalUnwrap bool) *CryptoServer {
+	return &CryptoServer{crypto: crypto, serv: serv, internalUnwrap: internalUnwrap}
 }
 
 func (s *CryptoServer) KpGen(ctx context.Context, req *cryptov1.KpGenRequest) (*cryptov1.KpGenResponse, error) {
@@ -235,13 +246,19 @@ func (s *CryptoServer) Wrap(ctx context.Context, req *cryptov1.WrapRequest) (*cr
 }
 
 func (s *CryptoServer) Unwrap(ctx context.Context, req *cryptov1.UnwrapRequest) (*cryptov1.UnwrapResponse, error) {
-	if err := authorize(ctx, "crypto:unwrap"); err != nil {
+	if !s.internalUnwrap {
+		return nil, status.Error(codes.Unimplemented, "operation is disabled")
+	}
+	if err := authorize(ctx, "internal:unwrap"); err != nil {
 		return nil, err
 	}
+	slog.InfoContext(ctx, "internal crypto command", "operation", "unwrap", "phase", "start")
 	resp, err := s.crypto.Unwrap(ctx, dto.UnwrapReq{KeyKbpk: req.KeyKbpk, Kbpk: req.Kbpk})
 	if err != nil {
+		slog.WarnContext(ctx, "internal crypto command", "operation", "unwrap", "phase", "failed")
 		return nil, grpcErr(err)
 	}
+	slog.InfoContext(ctx, "internal crypto command", "operation", "unwrap", "phase", "complete")
 	return &cryptov1.UnwrapResponse{Status: resp.Status, Key: resp.Key}, nil
 }
 
@@ -299,10 +316,16 @@ func grpcErr(err error) error {
 		fb  errs.Forbidden
 		big errs.TooLarge
 		ni  errs.NotImplemented
+		ci  interface {
+			error
+			InvalidMessage() string
+		}
 	)
 	switch {
 	case errors.As(err, &inv):
 		return status.Error(codes.InvalidArgument, err.Error())
+	case errors.As(err, &ci):
+		return status.Error(codes.InvalidArgument, ci.InvalidMessage())
 	case errors.As(err, &nf):
 		return status.Error(codes.NotFound, "not found")
 	case errors.As(err, &cf):
