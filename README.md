@@ -64,6 +64,9 @@ cd services/crypto_svc && make test    # go test ./...
 
 See [`docs/testing.md`](docs/testing.md).
 
+Production-hardening and Python migration-parity work is tracked in
+[`todo.md`](todo.md).
+
 ## license
 
 MIT — see [LICENSE](LICENSE) and [LICENSES.md](LICENSES.md) for third-party
